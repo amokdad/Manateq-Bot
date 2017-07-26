@@ -12,8 +12,8 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 
 // Create chat connector for communicating with the Bot Framework Service
 var connector = new builder.ChatConnector({
-    appId: "3787eefc-2a27-44b9-b3bb-5bb812101b4f",
-    appPassword: "5jkO0SFt4bDdUo7fEkjFBkY"
+    appId: process.env.MICROSOFT_APP_ID,
+    appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 
 // Listen for messages from users 
@@ -39,36 +39,23 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer, QnaRecognizer
         }
     );
     */
-    session.send("Greeting Intent Detected");
     session.beginDialog("welcome");
 })
 .matches('Invest',(session, args) => {
-    session.send("Invest Intent Detected");
     session.beginDialog("invest");
 })
-.matches('Question',(session, args) => {
-    session.send("Question Intent Detected");
-    session.beginDialog("question");
-})
 .matches('None',(session, args) => {
-
-    var options = {
-        host: "westus.api.cognitive.microsoft.com/qnamaker/v2.0",
-        path:"/knowledgebases/83feeddc-ec61-4bd8-88b7-255b451c86ac/generateAnswer",
-        method: 'POST', 
-        port:443,
-        headers:{"Ocp-Apim-Subscription-Key": "5721988f51b24dc9b2fa7bf95bb6b7c9","Content-Type": "application/json"},
-        body : {"question":"hi"}
-    };
-
-    http.request(options, function(res) {
-        res.setEncoding('utf8');
-        res.on('data', function (chunk) {
-            session.send(chunk);
-        });
-    }).end();
-
-    session.send("couldn't get what you are trying to say"); 
+    if(session.conversationData.unknown != null){
+        session.send("couldn't get what you are trying to say");
+        session.conversationData.unknown++;
+    }
+    else{
+        session.send("couldn't get what you are trying to say");
+        session.conversationData.unknown=0;
+    }
+    if(session.conversationData.unknown >= program.Constants.questionBeforeGenericHelp){
+        session.beginDialog("manualHelp");
+    }
 })
 .matches('qna',[
     function (session, args, next) {
@@ -79,7 +66,7 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer, QnaRecognizer
             else{
                 session.conversationData.occurance=0;
             }
-            if(session.conversationData.occurance >= program.Constants.questionesBeforeInvest){
+            if(session.conversationData.occurance >= program.Constants.questionsBeforeInvest){
                 session.replaceDialog("wantToInvest");
             }
             else
@@ -89,7 +76,8 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer, QnaRecognizer
 
 var program = {
     Constants:{
-        questionesBeforeInvest : 2
+        questionsBeforeInvest : 2,
+        questionBeforeGenericHelp : 1
     },
     Options:{
         Zones: {
@@ -127,6 +115,22 @@ var program = {
             "Production facility":{Description:"Production facility"},
             "Training Facility":{Description:"Training Facility"},
             "Warehouse / Distribution Center":{Description:"Warehouse / Distribution Center"}
+        },
+        ManualHelp:{
+            "Location":{ 
+                Title:"Location", 
+                Description:"please select one of the below locations",
+                Items:{
+                    "Ras Abu Funtas": {
+                        Title:"west bay",
+                        Description:"it is in the fourth street blabla"
+                    },
+                     "Um Al Houl": {
+                        Title:"west bay",
+                        Description:"it is in the fourth street blabla"
+                    }
+                }           
+            }
         }
     },
     Init : function(){
@@ -156,7 +160,12 @@ var program = {
 
         bot.dialog("welcome",[
             function(session){
-                builder.Prompts.text(session,"Hi, please let me know whats is your name");
+                if(session.conversationData.name == null){
+                    builder.Prompts.text(session,"Hi, please let me know whats is your name");
+                }
+                else{
+                    session.send("Hi again "  + session.conversationData.name + ", how may i help you?")
+                }
             },
             function(session,results){
                 var name = results.response;
@@ -191,11 +200,11 @@ var program = {
             },
             function(session,results){ //get sector
                 session.dialogData.zone = results.response;
-                builder.Prompts.choice(session, "Please select the sector that best describes your activity.", program.Options.Sectors);
+                builder.Prompts.choice(session, "Please select the sector that best describes your activity.", program.Options.Sectors,{listStyle: builder.ListStyle.button});
             },
             function(session,results){ //get operation
                 session.dialogData.sector = results.response;
-                builder.Prompts.choice(session, "Please select what type of operation you wish to establish.", program.Options.Operations);
+                builder.Prompts.choice(session, "Please select what type of operation you wish to establish.", program.Options.Operations,{listStyle: builder.ListStyle.button});
             },
             function(session,results){ //get how you heard about us
                 session.dialogData.operation = results.response;
@@ -208,6 +217,9 @@ var program = {
             function(session,results){ // end
                 session.dialogData.comment = results.response;
                 builder.Prompts.text(session, "Thanks, we have recorded your Enquiry and one of our consultants will be in touch with you very soon.\n\nA copy of your enquiry has been forwarded to " + session.dialogData.email + ".\n\nIs there anything else that I can help you with?");
+            },
+            function(session,results){
+                session.send("Thank you for visiting our website, have a good day.")
                 session.endDialog();
             }
         ]);
@@ -252,10 +264,27 @@ var program = {
                     session.replaceDialog("invest");
                 }
                 else{
+                    session.send("Okay, Thanks")
                     session.endDialog();
                 }
             }
         ]);
+        bot.dialog("manualHelp",[
+            function(session){
+                session.send("we will try to help you manually");
+                builder.Prompts.choice(session, "Please select one of the below", program.Options.ManualHelp,{listStyle: builder.ListStyle.button});
+            },
+            function(session,results){
+                var result = program.Options.ManualHelp[results.response.entity];
+                session.dialogData.item = result;
+                builder.Prompts.choice(session, result.Description, result.Items,{listStyle: builder.ListStyle.button});
+            },
+            function(session,results){
+                var item = session.dialogData.item.Items[results.response.entity];
+                session.send(item.Title + "\n\n" +  item.Description);
+                session.endDialog();
+            },
+        ])
     },
  
 }
