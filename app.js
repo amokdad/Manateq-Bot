@@ -187,7 +187,7 @@ var program = {
             },
             function(session,results){ //get zone
                 session.dialogData.mobile = results.response;
-                builder.Prompts.choice(session, "Which zone are you more interested in?", program.Options.Zones);
+                builder.Prompts.choice(session, "Which zone are you more interested in?", program.Options.Zones,{listStyle: builder.ListStyle.button});
             },
             function(session,results){ //get sector
                 session.dialogData.zone = results.response;
