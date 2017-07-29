@@ -406,6 +406,18 @@ var program = {
 
 program.Init();
 
+bot.on('conversationUpdate', function (activity) {
+    if (activity.membersAdded) {
+        activity.membersAdded.forEach((identity) => {
+            if (identity.id === activity.address.bot.id) {
+                var reply = new builder.activity()
+                    .address(activity.address)
+                    .text('Hi there!');
+                bot.send(reply);
+            }
+        });
+    }
+});
 /*
 bot.dialog("/", [
     function (session) {
