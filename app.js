@@ -261,7 +261,7 @@ var program = {
             }
         ]);
         bot.dialog("invest",[
-            function(session){ //get girst name
+            function(session){ 
                 session.beginDialog("setLanguage");
             },
             function(session,args){
@@ -386,9 +386,10 @@ var program = {
                session.preferredLocale(locale,function(err){
                    if(!err){
                       //session.send("welcome");
+                      session.endDialog();
                    }
                });
-               session.endDialog();
+               
             }
         ])
     },
