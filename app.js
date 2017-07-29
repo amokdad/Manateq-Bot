@@ -15,8 +15,7 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 // Create chat connector for communicating with the Bot Framework Service
 var connector = new builder.ChatConnector({
     appId: process.env.MICROSOFT_APP_ID,
-    appPassword: process.env.MICROSOFT_APP_PASSWORD,
-    userWelcomeMessage: 'User Welcome Message Works!',
+    appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 
 // Listen for messages from users 
@@ -26,13 +25,13 @@ server.post('/api/messages', connector.listen());
 var bot = new builder.UniversalBot(connector,{
     localizerSettings: { 
         defaultLocale: "en" 
-    }
+    }   
 });
 
 // ------------------------------ Recognizers ------------------------------
 var ArabicRecognizers = {
-        investRecognizer : new builder.RegExpRecognizer( "Invest", /^(مستثمر|إستثمار|أريد أن استثمر)/i),
-        greetingRecognizer : new builder.RegExpRecognizer( "Greeting", /^(السلام عليكم|صباح الخير|مساء الخير|مرحباً)/i),
+        investRecognizer : new builder.RegExpRecognizer( "Invest", /(مستثمر|إستثمار|أريد أن استثمر)/i),
+        greetingRecognizer : new builder.RegExpRecognizer( "Greeting", /(السلام عليكم|صباح الخير|مساء الخير|مرحباً)/i),
     }
 
 var recognizer = new builder.LuisRecognizer("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/0cfcf9f6-0ad6-47c3-bd2a-094f979484db?subscription-key=13b10b366d2743cda4d800ff0fd10077&timezoneOffset=0&verbose=true&q=");
@@ -193,19 +192,41 @@ var program = {
             }
         },
         ManualHelp:{
-            "Location":{ 
-                Title:"Location", 
-                Description:"please select one of the below locations",
-                Items:{
-                    "Ras Abu Funtas": {
-                        Title:"west bay",
-                        Description:"it is in the fourth street blabla"
-                    },
-                     "Um Al Houl": {
-                        Title:"west bay",
-                        Description:"it is in the fourth street blabla"
-                    }
-                }           
+            en:{
+                "Location":{ 
+                    Title:"Location", 
+                    Description:"please select one of the below locations",
+                    Items:{
+                        "Ras Abu Funtas": {
+                            Title:"west bay",
+                            Description:"An area of 4.01 km², situated adjacent to Do​​ha’s new Hamad International Airport, Ras Bufontas is an ideal location for businesses requiring international connectivity.<br/>Ras Bufontas is set to become an advanced technology and logistics hub for the region, attracting regional and global business, trade, and investment thereby contributing to the Qatari Government’s vision of becoming a SMART nation.<br/>This Zone will provide a vibrant and inspiring workplace. A long-lasting, high-quality, and low-maintenance design includes service hubs, public spaces, land for labour accommodation, utilities access, versatile office and retail space, and our Headquarters.<br/>With the Gulf Region and beyond on ​the doorstep, the world-class infrastructure at Ras Bufontas will help your business to grow both within and outside of Qatar.​​​"
+                        },
+                        "Um Al Houl": {
+                            Title:"west bay",
+                            Description:"it is in the fourth street blabla"
+                        }
+                    }           
+                },
+                "Working Hours":{},
+                "Projects":{},
+            },
+            ar:{
+                "المكان":{ 
+                    Title:"المكان", 
+                    Description:"الرجاء الاختيار من الأماكن التالية",
+                    Items:{
+                        "راس أبو فنطاس": {
+                            Title:"الدفنة",
+                            Description:"​​تبلغ مساحة رأس بوفنطاس حوالي 4 كيلو متر مربع، وتقع هذه المنطقة بالقرب من مطار حمد الدولي، وتمتاز بموقعها المثالي للأعمال التي تستدعي التواصل على مستوى دولي.<br/>تتميز رأس بوفنطاس بكل ما يجعلها مركزاً للتكنولوجيا والخدمات اللوجستية في المنطقة، والقدرة على جذب الأعمال الإقليمية والعالمية، والتبادل التجاري والاستثمارات التي ستحقق خ​طة حكومة دولة قطر في أن تصبح الدولة الذكية.<br/>يعزز استدامة الأعمال ومستوى الجودة الرفيع والكلفة المنخفضة للصيانة، وذلك كونها تحتوي على مراكز وخدمات،والمساحات العامة، ومباني العمال، وخدمات المرافق العامة، وتجهيزات المكاتب والمتاجر، والمقر الرئيسي الخاص بشركة 'مناطق'."
+                        },
+                        "أم الهلول": {
+                            Title:"الغرافة",
+                            Description:"it is in the fourth street blabla"
+                        }
+                    }           
+                },
+                "مواعيد العمل":{},
+                "المشاريع":{}
             }
         },
         Languages:"العربية|English"
@@ -296,7 +317,7 @@ var program = {
                 session.dialogData.comment = results.response;
                 //Send Email
                 program.Helpers.SendEmail({email:session.dialogData.email,user:session.dialogData.name},session.preferredLocale());
-                builder.Prompts.text(session, "thanksInquiry",session.dialogData.email);
+                session.send("thanksInquiry",session.dialogData.email);
                 session.endDialog();
             }
         ]);
@@ -348,11 +369,12 @@ var program = {
         ]);
         bot.dialog("manualHelp",[
             function(session){
-                session.send("we will try to help you manually");
-                builder.Prompts.choice(session, "Please select one of the below", program.Options.ManualHelp,{listStyle: builder.ListStyle.button});
+                var locale = session.preferredLocale();
+                builder.Prompts.choice(session, "manualHelp", program.Options.ManualHelp[locale],{listStyle: builder.ListStyle.button});
             },
             function(session,results){
-                var result = program.Options.ManualHelp[results.response.entity];
+                var locale = session.preferredLocale();
+                var result = program.Options.ManualHelp[locale][results.response.entity];
                 session.dialogData.item = result;
                 builder.Prompts.choice(session, result.Description, result.Items,{listStyle: builder.ListStyle.button});
             },
