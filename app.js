@@ -74,6 +74,7 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer,
                 session.conversationData.occurance=0;
             }
             if(session.conversationData.occurance >= program.Constants.questionsBeforeInvest){
+                session.send(answerEntity.entity);
                 session.replaceDialog("wantToInvest");
             }
             else
