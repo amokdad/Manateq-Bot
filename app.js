@@ -46,23 +46,10 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer,
     ArabicRecognizers.greetingRecognizer] 
 })
 .matches('Greeting',(session, args) => {
-    if(session.conversationData.lang == null)
-    {
-        session.beginDialog("setLanguage");
-    }
-    else
-    {
     session.beginDialog("welcome");
-    }
 })
 .matches('Invest',(session, args) => {
-    if(session.conversationData.lang == null)
-    {
-        session.beginDialog("setLanguage");
-    }
-    else{
     session.beginDialog("invest");
-    }
 })
 .matches('None',(session, args) => {
     if(session.conversationData.unknown != null){
@@ -256,11 +243,8 @@ var program = {
     RegisterDialogs : function(){
 
         bot.dialog("welcome",[
-
             function(session){
-                if(session.conversationData.language == null){
-                    session.beginDialog("setLanguage");
-                }
+                session.beginDialog("setLanguage");
             },
             function(session,results){
                 if(session.conversationData.name == null){
@@ -278,7 +262,10 @@ var program = {
         ]);
         bot.dialog("invest",[
             function(session){ //get girst name
-                session.beginDialog("getname");
+                session.beginDialog("setLanguage");
+            },
+            function(session,args){
+                session.beginDialog("getname");    
             },
             function(session,results){ //get email
                 session.dialogData.name = session.conversationData.name;
@@ -386,14 +373,19 @@ var program = {
         ]);
         bot.dialog("setLanguage",[
             function(session){
-                builder.Prompts.choice(session, "selectYourLanguage",program.Options.Languages,{listStyle: builder.ListStyle.button});
+                if(session.conversationData.lang == null)
+                {
+                    builder.Prompts.choice(session, "selectYourLanguage",program.Options.Languages,{listStyle: builder.ListStyle.button});
+                }else{
+                    session.endDialog();
+                }
             },
             function(session,results){
                var locale = program.Helpers.GetLocal(results.response.index);
                session.conversationData.lang = locale;
                session.preferredLocale(locale,function(err){
                    if(!err){
-                      session.send("welcome");
+                      //session.send("welcome");
                    }
                });
                session.endDialog();
