@@ -47,10 +47,23 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer,
     ArabicRecognizers.greetingRecognizer] 
 })
 .matches('Greeting',(session, args) => {
+    if(session.conversationData.lang == null)
+    {
+        session.beginDialog("setLanguage");
+    }
+    else
+    {
     session.beginDialog("welcome");
+    }
 })
 .matches('Invest',(session, args) => {
+    if(session.conversationData.lang == null)
+    {
+        session.beginDialog("setLanguage");
+    }
+    else{
     session.beginDialog("invest");
+    }
 })
 .matches('None',(session, args) => {
     if(session.conversationData.unknown != null){
@@ -81,13 +94,6 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer,
                 session.send(answerEntity.entity);
     }
 ])
-.matches('CancelIntent',[
-    function (session, args, next) {
-           session.send("greeting");
-           session.send("helpdsadsa");
-    }
-])
-
 var program = {
     Constants:{
         questionsBeforeInvest : 2,
@@ -297,7 +303,7 @@ var program = {
         bot.dialog("getname",[
             function(session){ //get girst name
                 if(session.conversationData.name == null){
-                    builder.Prompts.text(session,"Great, please can I have your full name");
+                    builder.Prompts.text(session,"firstNamePlease");
                 }
                 else{
                     session.endDialog();
@@ -362,7 +368,9 @@ var program = {
             },
             function(session,results){
                var locale = program.Helpers.GetLocal(results.response.index);
+               session.conversationData.lang = locale;
                session.preferredLocale(locale);
+               session.send("welcome");
                session.endDialog();
             }
         ])
@@ -406,55 +414,18 @@ var program = {
 
 program.Init();
 
-bot.on('conversationUpdate', function (activity) {
+bot.on('conversationUpdate', function (activity) {  
     if (activity.membersAdded) {
         activity.membersAdded.forEach((identity) => {
             if (identity.id === activity.address.bot.id) {
-                var reply = new builder.activity()
+                var reply = new builder.Message()
                     .address(activity.address)
-                    .text('Hi there!');
+                    .text('Welcome to manateq, how can i help you - أهلاً وسهلاً، كيف يمكنني مساعدتك');
                 bot.send(reply);
             }
         });
     }
 });
-/*
-bot.dialog("/", [
-    function (session) {
-        session.beginDialog('/localePicker');
-    },
-    function (session) {
-        builder.Prompts.text(session, "greeting");
-    }
-])
-bot.dialog('/localePicker', [
-    function (session) {
-        // Prompt the user to select their preferred locale
-        builder.Prompts.choice(session, "What's your preferred language?", 'English|Arabic');
-    },
-    function (session, results) {
-        // Update preferred locale
-        var locale;
-        switch (results.response.entity) {
-            case 'English':
-                locale = 'en';
-                break;
-            case 'Arabic':
-                locale = 'ar';
-                break;
-        }
-        session.preferredLocale(locale, function (err) {
-            if (!err) {
-                // Locale files loaded
-                session.endDialog("Your preferred language is now %s.", results.response.entity);
-            } else {
-                // Problem loading the selected locale
-                session.error(err);
-            }
-        });
-    }
-]);
-*/
 
 
 

@@ -1,4 +1,6 @@
 {
+    "firstNamePlease" :"Great, please can I have your full name",
+    "welcome" : "Hi, how may i help you?",
     "validEmail":"please enter a valid email",
     "enterEmail" :"please enter your email",
     "askForEmail" : "Hi, please let me know whats is your name",
