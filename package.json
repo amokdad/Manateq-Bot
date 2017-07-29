@@ -16,6 +16,7 @@
     "botbuilder-cognitiveservices": "^1.1.0",
     "http": "0.0.0",
     "https": "^1.0.0",
+    "nodemailer": "^4.0.1",
     "q": "^1.5.0",
     "restify": "^5.0.1"
   }

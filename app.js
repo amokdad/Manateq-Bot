@@ -2,6 +2,8 @@ var restify = require('restify');
 var builder = require('botbuilder');
 var https = require('https');
 var cognitiveservices = require('botbuilder-cognitiveservices');
+var nodemailer = require('nodemailer');
+
 Q = require('q');
 
 // Setup Restify Server
@@ -13,32 +15,38 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 // Create chat connector for communicating with the Bot Framework Service
 var connector = new builder.ChatConnector({
     appId: process.env.MICROSOFT_APP_ID,
-    appPassword: process.env.MICROSOFT_APP_PASSWORD
+    appPassword: process.env.MICROSOFT_APP_PASSWORD,
+    userWelcomeMessage: 'User Welcome Message Works!',
 });
 
 // Listen for messages from users 
 server.post('/api/messages', connector.listen());
 
 // Receive messages from the user and respond by echoing each message back (prefixed with 'You said:')
-var bot = new builder.UniversalBot(connector);
+var bot = new builder.UniversalBot(connector,{
+    localizerSettings: { 
+        defaultLocale: "en" 
+    }
+});
+
+// ------------------------------ Recognizers ------------------------------
+var ArabicRecognizers = {
+        investRecognizer : new builder.RegExpRecognizer( "Invest", /^(مستثمر|إستثمار|أريد أن استثمر)/i),
+        greetingRecognizer : new builder.RegExpRecognizer( "Greeting", /^(السلام عليكم|صباح الخير|مساء الخير|مرحباً)/i),
+    }
+
 var recognizer = new builder.LuisRecognizer("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/0cfcf9f6-0ad6-47c3-bd2a-094f979484db?subscription-key=13b10b366d2743cda4d800ff0fd10077&timezoneOffset=0&verbose=true&q=");
 var QnaRecognizer = new cognitiveservices.QnAMakerRecognizer({
 	knowledgeBaseId: "83feeddc-ec61-4bd8-88b7-255b451c86ac", 
     subscriptionKey: "5721988f51b24dc9b2fa7bf95bb6b7c9"});
-    
-var intents = new builder.IntentDialog({ recognizers: [recognizer, QnaRecognizer] })
-.matches('Greeting',(session, args) => {
+// ------------------------------ End Recognizers ------------------------------   
 
-    /*
-    program.IntentHelper.GetIntent("Hi").then(
-        function(result){
-            session.send(result);
-        },
-        function(err){
-            session.send("Error");
-        }
-    );
-    */
+var intents = new builder.IntentDialog({ recognizers: [recognizer, 
+    QnaRecognizer,
+    ArabicRecognizers.investRecognizer,
+    ArabicRecognizers.greetingRecognizer] 
+})
+.matches('Greeting',(session, args) => {
     session.beginDialog("welcome");
 })
 .matches('Invest',(session, args) => {
@@ -46,11 +54,11 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer, QnaRecognizer
 })
 .matches('None',(session, args) => {
     if(session.conversationData.unknown != null){
-        session.send("couldn't get what you are trying to say");
+        session.send("cannotUnderstand");
         session.conversationData.unknown++;
     }
     else{
-        session.send("couldn't get what you are trying to say");
+        session.send("cannotUnderstand");
         session.conversationData.unknown=0;
     }
     if(session.conversationData.unknown >= program.Constants.questionBeforeGenericHelp){
@@ -73,48 +81,110 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer, QnaRecognizer
                 session.send(answerEntity.entity);
     }
 ])
+.matches('CancelIntent',[
+    function (session, args, next) {
+           session.send("greeting");
+           session.send("helpdsadsa");
+    }
+])
 
 var program = {
     Constants:{
         questionsBeforeInvest : 2,
-        questionBeforeGenericHelp : 1
+        questionBeforeGenericHelp : 1,
+        EmailTemplate : {
+            Content:{
+                en:"Dear {{user}} <br/> Thanks alot for your interest in investing in Manateq, our team will study your inquiry and will get back to you as soon as possible",
+                ar:"عزيزي {{user}} <br/> شكراً على اهتمامك بالاستثمار في مناطق، سوف نقوم بدراسة طلبك والرد عليك بأقرب فرصة ممكنة"
+            },
+            Subject:{
+                en:"Thanks from Manateq",
+                ar:"شكراً من مناطق"
+            }
+        },
+        YesNo : {
+            en:"Yes|No",
+            ar:"نعم|كلا"
+        }
     },
     Options:{
         Zones: {
-            "Ras Bufontas":{Description:"Ras Bufontas"},
-            "Ym Alhaloul":{Description:"Ym Alhaloul"},
-            "I’m not sure":{Description:"I’m not sure"}
+            en:{
+                "Ras Bufontas":{Description:"Ras Bufontas"},
+                "Ym Alhaloul":{Description:"Ym Alhaloul"},
+                "I’m not sure":{Description:"I’m not sure"}
+            },
+            ar:{
+                "راس أبوفنطاس":{Description:"راس أبوفنطاس"},
+                "أم الهلول":{Description:"أم الهلول"},
+                "لست متأكد":{Description:"لست متأكد"}
+            }
         },
         Sectors: {
-            "Aviation/Aerospace":{Description:"Aviation/Aerospace"},
-            "Constitutions & Engineering (excluding main or subcontractor)":{Description:"Constitutions & Engineering (excluding main or subcontractor)"},
-            "Construction Materials (including green/sustainable)":{Description:"Construction Materials (including green/sustainable)"},
-            "Electrical equipment":{Description:"Electrical equipment"},
-            "Food & Beverage processing":{Description:"Food & Beverage processing"},
-            "Healthcare Equipment/Services":{Description:"Healthcare Equipment/Services"},
-            "ICT (Hardware, software, new media)":{Description:"ICT (Hardware, software, new media)"},
-            "Logistics/Transportation":{Description:"Logistics/Transportation"},
-            "Machinery":{Description:"Machinery"},
-            "Metals (intermediate and finished goods)":{Description:"Metals (intermediate and finished goods)"},
-            "Nonprofit/NGO/Government/Semi-government":{Description:"Nonprofit/NGO/Government/Semi-government"},
-            "Oil & Gas Equipment":{Description:"Oil & Gas Equipment"},
-            "Oil & Gas Services":{Description:"Oil & Gas Services"},
-            "Pharmaceutical/Biotechnology/Life Science":{Description:"Pharmaceutical/Biotechnology/Life Science"},
-            "Plastics (intermediate and finished goods)":{Description:"Plastics (intermediate and finished goods)"},
-            "Professional/Business/Commercial Services":{Description:"Professional/Business/Commercial Services"},
-            "Renewable/Sustainable Technology":{Description:"Renewable/Sustainable Technology"},
-            "Vehicles (light and heavy manufacturing, including components)":{Description:"Vehicles (light and heavy manufacturing, including components)"},
-            "Wholesale/Distributor/Trader/Retail":{Description:"Wholesale/Distributor/Trader/Retail"}
+            en:{
+                "Aviation/Aerospace":{Description:"Aviation/Aerospace"},
+                "Constitutions & Engineering (excluding main or subcontractor)":{Description:"Constitutions & Engineering (excluding main or subcontractor)"},
+                "Construction Materials (including green/sustainable)":{Description:"Construction Materials (including green/sustainable)"},
+                "Electrical equipment":{Description:"Electrical equipment"},
+                "Food & Beverage processing":{Description:"Food & Beverage processing"},
+                "Healthcare Equipment/Services":{Description:"Healthcare Equipment/Services"},
+                "ICT (Hardware, software, new media)":{Description:"ICT (Hardware, software, new media)"},
+                "Logistics/Transportation":{Description:"Logistics/Transportation"},
+                "Machinery":{Description:"Machinery"},
+                "Metals (intermediate and finished goods)":{Description:"Metals (intermediate and finished goods)"},
+                "Nonprofit/NGO/Government/Semi-government":{Description:"Nonprofit/NGO/Government/Semi-government"},
+                "Oil & Gas Equipment":{Description:"Oil & Gas Equipment"},
+                "Oil & Gas Services":{Description:"Oil & Gas Services"},
+                "Pharmaceutical/Biotechnology/Life Science":{Description:"Pharmaceutical/Biotechnology/Life Science"},
+                "Plastics (intermediate and finished goods)":{Description:"Plastics (intermediate and finished goods)"},
+                "Professional/Business/Commercial Services":{Description:"Professional/Business/Commercial Services"},
+                "Renewable/Sustainable Technology":{Description:"Renewable/Sustainable Technology"},
+                "Vehicles (light and heavy manufacturing, including components)":{Description:"Vehicles (light and heavy manufacturing, including components)"},
+                "Wholesale/Distributor/Trader/Retail":{Description:"Wholesale/Distributor/Trader/Retail"}
+            },
+            ar:{
+                "الأتصالات وتكنولوجيا المعلومات (الأجهزة، البرمجيات، وسائل الأعلام الحديثة)":{Description:"الأتصالات وتكنولوجيا المعلومات (الأجهزة، البرمجيات، وسائل الأعلام الحديثة)"},
+                "الآليات":{Description:"الآليات"},
+                "الأمداد والتجهيز/النقل":{Description:"الأمداد والتجهيز/النقل"},
+                "البلاستيكيات (سلع النهائية والوسيطة)":{Description:"البلاستيكيات (سلع النهائية والوسيطة)"},
+                "الصناعات الدوائية/التكنولوجية الحيوية/علم الحياة":{Description:"الصناعات الدوائية/التكنولوجية الحيوية/علم الحياة"},
+                "الصناعات الهندسية والبنى الأساسية (بستثناء المتعاقدين الرئيسيين والفرعيين)":{Description:"الصناعات الهندسية والبنى الأساسية (بستثناء المتعاقدين الرئيسيين والفرعيين)"},
+                "الطيران/الصناعات الجوية":{Description:"الطيران/الصناعات الجوية"},
+                "العربات (التصنيع الخفيف والثقيل بمافي ذلك الأجزاء)":{Description:"العربات (التصنيع الخفيف والثقيل بمافي ذلك الأجزاء)"},
+                "المعادن (سلع النهائية والوسيطة)":{Description:"المعادن (سلع النهائية والوسيطة)"},
+                "بيع الجملة/التوزيع/التجاري/التجزئة":{Description:"بيع الجملة/التوزيع/التجاري/التجزئة"},
+                "تجهيز المواد الغذائية والمشروبات":{Description:"تجهيز المواد الغذائية والمشروبات"},
+                "تكنولوجيا إعادة التجديد / الأستدامة":{Description:"تكنولوجيا إعادة التجديد / الأستدامة"},
+                "خدمات النفط والغاز":{Description:"خدمات النفط والغاز"},
+                "خدمات حرفية/أعمال/تجارية":{Description:"خدمات حرفية/أعمال/تجارية"},
+                "خدمات ومعدات الرعاية الصحية":{Description:"خدمات ومعدات الرعاية الصحية"},
+                "غير ربحية/مجتمع مدني/حكومي/شبه حكومي":{Description:"غير ربحية/مجتمع مدني/حكومي/شبه حكومي"},
+                "معدات الكهربائية":{Description:"معدات الكهربائية"},
+                "معدات النفط والغاز":{Description:"معدات النفط والغاز"},
+                "مواد البناء (بما في ذلك الخضراء / المتوافقة مع مفهوم الأستدامة)":{Description:"مواد البناء (بما في ذلك الخضراء / المتوافقة مع مفهوم الأستدامة)"}
+            }
         },
         Operations: {
-            "Assembly facility":{Description:"Assembly facility"},
-            "Call Center":{Description:"Call Center"},
-            "Corporate / Reginoal HQ":{Description:"Corporate / Reginoal HQ"},
-            "Maintenance & Repair Facility":{Description:"Maintenance & Repair Facility"},
-            "Marketing / Sales Office":{Description:"Marketing / Sales Office"},
-            "Production facility":{Description:"Production facility"},
-            "Training Facility":{Description:"Training Facility"},
-            "Warehouse / Distribution Center":{Description:"Warehouse / Distribution Center"}
+            en:{
+                "Assembly facility":{Description:"Assembly facility"},
+                "Call Center":{Description:"Call Center"},
+                "Corporate / Reginoal HQ":{Description:"Corporate / Reginoal HQ"},
+                "Maintenance & Repair Facility":{Description:"Maintenance & Repair Facility"},
+                "Marketing / Sales Office":{Description:"Marketing / Sales Office"},
+                "Production facility":{Description:"Production facility"},
+                "Training Facility":{Description:"Training Facility"},
+                "Warehouse / Distribution Center":{Description:"Warehouse / Distribution Center"}
+            },
+            ar:{
+                "مرافق الأنتاج":{Description:"مرافق الأنتاج"},
+                "مرافق التجميع":{Description:"مرافق التجميع"},
+                "مرافق التدريب":{Description:"مرافق التدريب"},
+                "مرافق الصيانة والأصلاح":{Description:"مرافق الصيانة والأصلاح"},
+                "مركز الأتصال":{Description:"مركز الأتصال"},
+                "مركز التخزين / التوزيع":{Description:"مركز التخزين / التوزيع"},
+                "مقر الشركة المحلي / الأقليمي":{Description:"مقر الشركة المحلي / الأقليمي"},
+                "مكاتب التسويق / المبيعات":{Description:"مكاتب التسويق / المبيعات"}
+            }
         },
         ManualHelp:{
             "Location":{ 
@@ -131,12 +201,12 @@ var program = {
                     }
                 }           
             }
-        }
+        },
+        Languages:"العربية|English"
     },
     Init : function(){
         program.RegisterDialogs();
         bot.dialog("/",intents);
-
     },
     IntentHelper:{
         url : "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/0cfcf9f6-0ad6-47c3-bd2a-094f979484db?subscription-key=13b10b366d2743cda4d800ff0fd10077&timezoneOffset=0&verbose=true&q=",
@@ -159,31 +229,29 @@ var program = {
     RegisterDialogs : function(){
 
         bot.dialog("welcome",[
+
             function(session){
+                if(session.conversationData.language == null){
+                    session.beginDialog("setLanguage");
+                }
+            },
+            function(session,results){
                 if(session.conversationData.name == null){
-                    builder.Prompts.text(session,"Hi, please let me know whats is your name");
+                    builder.Prompts.text(session,"askForEmail");
                 }
                 else{
-                    session.send("Hi again "  + session.conversationData.name + ", how may i help you?")
+                    session.send("greetingAgain",session.conversationData.name)
                 }
             },
             function(session,results){
                 var name = results.response;
                 session.conversationData.name = name;
-                session.endDialog('Hi %s, how may I help you today?',name);
+                session.endDialog("greetingAsk",name);
             }
         ]);
-        /*
-        bot.dialog("question",[
-            function(session){
-                builder.Prompts.text(session,"Certainly I will be glad to assist you. Which aread would you like to ask about, Special Economic Zones, Logistics Parks or Industrial Zones?");
-                bot.dialog('/', basicQnAMakerDialog);
-            }
-        ]);
-        */
         bot.dialog("invest",[
             function(session){ //get girst name
-                 session.beginDialog("getname");
+                session.beginDialog("getname");
             },
             function(session,results){ //get email
                 session.dialogData.name = session.conversationData.name;
@@ -191,35 +259,38 @@ var program = {
             },
             function(session,results){ //get mobile
                 session.dialogData.email = results.response;
-                builder.Prompts.text(session,"Great " + session.dialogData.name + ", May i have your mobile number");
+                builder.Prompts.text(session,"getMobileNumber");
                
             },
             function(session,results){ //get zone
                 session.dialogData.mobile = results.response;
-                builder.Prompts.choice(session, "Which zone are you more interested in?", program.Options.Zones,{listStyle: builder.ListStyle.button});
+                var zones = program.Helpers.GetOptions(program.Options.Zones,session.preferredLocale());
+                builder.Prompts.choice(session, "getZones", zones,{listStyle: builder.ListStyle.button});
             },
             function(session,results){ //get sector
                 session.dialogData.zone = results.response;
-                builder.Prompts.choice(session, "Please select the sector that best describes your activity.", program.Options.Sectors,{listStyle: builder.ListStyle.button});
+                var sectors = program.Helpers.GetOptions(program.Options.Sectors,session.preferredLocale());
+                builder.Prompts.choice(session, "getSectors", sectors,{listStyle: builder.ListStyle.button});
             },
             function(session,results){ //get operation
                 session.dialogData.sector = results.response;
-                builder.Prompts.choice(session, "Please select what type of operation you wish to establish.", program.Options.Operations,{listStyle: builder.ListStyle.button});
+                var operations = program.Helpers.GetOptions(program.Options.Operations,session.preferredLocale());
+                //نوع العمل الذي ترغب بتأسيسة
+                builder.Prompts.choice(session, "getOperations", operations,{listStyle: builder.ListStyle.button});
             },
             function(session,results){ //get how you heard about us
                 session.dialogData.operation = results.response;
-                builder.Prompts.text(session, "Last question, can you tell me how you heard about the investment opportunities in Manateq?");
+                builder.Prompts.text(session, "getHowYouHeard");
             },
             function(session,results){ //get comment
                 session.dialogData.heard = results.response;
-                builder.Prompts.text(session, "Great, thanks for your time and for considering investing with Manateq. Would you like to leave any special comments for our Investment Consultant or anything specific you would like to inquire about?");
+                builder.Prompts.text(session, "addComment");
             },
             function(session,results){ // end
                 session.dialogData.comment = results.response;
-                builder.Prompts.text(session, "Thanks, we have recorded your Enquiry and one of our consultants will be in touch with you very soon.\n\nA copy of your enquiry has been forwarded to " + session.dialogData.email + ".\n\nIs there anything else that I can help you with?");
-            },
-            function(session,results){
-                session.send("Thank you for visiting our website, have a good day.")
+                //Send Email
+                program.Helpers.SendEmail({email:session.dialogData.email,user:session.dialogData.name},session.preferredLocale());
+                builder.Prompts.text(session, "thanksInquiry",session.dialogData.email);
                 session.endDialog();
             }
         ]);
@@ -240,9 +311,9 @@ var program = {
         bot.dialog("getEmail",[
             function(session,args){
                 if (args && args.reprompt) {
-                    builder.Prompts.text(session, "Please enter a valid Email");
+                    builder.Prompts.text(session, "validEmail");
                 } else {
-                builder.Prompts.text(session, "What is your Email?");
+                builder.Prompts.text(session, "enterEmail");
                 }
             },
             function(session,results)
@@ -256,11 +327,11 @@ var program = {
         ]);
         bot.dialog("wantToInvest",[
             function(session){
-                builder.Prompts.choice(session, "I see you are interested in knowing more about the exciting investment opportunities with Manateq. \n\n Would you like to give us some quick details, and we will have one of our investment consultants reach you for a full presentation?","Yes|No");
+                builder.Prompts.choice(session, "maybeinInvestor",program.Constants.YesNo[session.preferredLocale()],{listStyle: builder.ListStyle.button});
             },
             function(session,results){
-                var result = results.response.entity;
-                if(result == "Yes"){
+                var result = results.response.index;
+                if(result == 0){
                     session.replaceDialog("invest");
                 }
                 else{
@@ -284,32 +355,94 @@ var program = {
                 session.send(item.Title + "\n\n" +  item.Description);
                 session.endDialog();
             },
+        ]);
+        bot.dialog("setLanguage",[
+            function(session){
+                builder.Prompts.choice(session, "selectYourLanguage",program.Options.Languages,{listStyle: builder.ListStyle.button});
+            },
+            function(session,results){
+               var locale = program.Helpers.GetLocal(results.response.index);
+               session.preferredLocale(locale);
+               session.endDialog();
+            }
         ])
     },
+    Helpers: {
+        GetLocal : function(val){
+            return val == "1" ? "en" : "ar";
+        },
+        GetOptions : function(option,locale){
+            return option[locale];
+        },
+        SendEmail : function(data,locale){
+            var html = program.Constants.EmailTemplate.Content[locale];
+            var subject = program.Constants.EmailTemplate.Subject[locale];
+            html = html.replace("{{user}}",data.user);
+            var transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: 'rattazataom@gmail.com',
+                    pass: '!!xuloloL'
+                }
+            });
+            var mailOptions = {
+                from: 'rattazataom@gmail.com',
+                to: data.email,
+                subject: subject,
+                html: html,
+                
+            };
+            transporter.sendMail(mailOptions, function(error, info){
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+            });
+        }
+    } 
  
 }
 
 program.Init();
 
-bot.on('contactRelationUpdate', function (message) {
-    if (message.action === 'add') {
-        var name = message.user ? message.user.name : null;
-        var reply = new builder.Message()
-                .address(message.address)
-                .text("Hello %s... Thanks for adding me.", name || 'there');
-        bot.send(reply);
+/*
+bot.dialog("/", [
+    function (session) {
+        session.beginDialog('/localePicker');
+    },
+    function (session) {
+        builder.Prompts.text(session, "greeting");
     }
-});
-
-
-
-    
-
-
-
-
-
-
+])
+bot.dialog('/localePicker', [
+    function (session) {
+        // Prompt the user to select their preferred locale
+        builder.Prompts.choice(session, "What's your preferred language?", 'English|Arabic');
+    },
+    function (session, results) {
+        // Update preferred locale
+        var locale;
+        switch (results.response.entity) {
+            case 'English':
+                locale = 'en';
+                break;
+            case 'Arabic':
+                locale = 'ar';
+                break;
+        }
+        session.preferredLocale(locale, function (err) {
+            if (!err) {
+                // Locale files loaded
+                session.endDialog("Your preferred language is now %s.", results.response.entity);
+            } else {
+                // Problem loading the selected locale
+                session.error(err);
+            }
+        });
+    }
+]);
+*/
 
 
 

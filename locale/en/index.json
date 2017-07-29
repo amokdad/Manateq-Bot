@@ -1,0 +1,17 @@
+{
+    "validEmail":"please enter a valid email",
+    "enterEmail" :"please enter your email",
+    "askForEmail" : "Hi, please let me know whats is your name",
+    "greetingAgain" : "Hi again %s, how may i help you?",
+    "greetingAsk" : "Hi %s, how may I help you today?",
+    "selectYourLanguage" : "Please select your language - الرجاء إختيار لغتك المفضلة",
+    "getMobileNumber":"Great, May i have your mobile number",
+    "getZones" :"Which zone are you more interested in?",
+    "getSectors" :"Please select the sector that best describes your activity.",
+    "getOperations" :"Please select what type of operation you wish to establish.",
+    "getHowYouHeard" :"Last question, can you tell me how you heard about the investment opportunities in Manateq?",
+    "cannotUnderstand":"Sorry i couldn't understand what you are saying",
+    "addComment" :"Great, thanks for your time and for considering investing with Manateq. Please leave your enquiry",
+    "thanksInquiry":"Thanks, we have recorded your Enquiry and one of our consultants will be in touch with you very soon.\n\nA copy of your enquiry has been forwarded to %s.", 
+    "maybeinInvestor":"I see you are interested in knowing more about the exciting investment opportunities with Manateq. \n\n Would you like to give us some quick details, and we will have one of our investment consultants reach you for a full presentation?"
+}
