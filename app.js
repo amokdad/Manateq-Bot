@@ -392,6 +392,7 @@ var program = {
                var locale = program.Helpers.GetLocal(results.response.index);
                session.conversationData.lang = locale;
                session.preferredLocale(locale);
+               session.send(JSON.stringify(session.preferredLocale()));
                session.send("welcome");
                session.endDialog();
             }
