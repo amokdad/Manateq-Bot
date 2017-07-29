@@ -428,7 +428,7 @@ bot.on('conversationUpdate', function (activity) {
 });
 
 
-app.get(/.*/, restify.serveStatic({ 'directory': '.', 'default': 'index.html' }));
+
 
 
 
