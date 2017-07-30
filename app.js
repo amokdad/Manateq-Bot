@@ -354,9 +354,9 @@ var program = {
     RegisterDialogs : function(){
 
         bot.dialog("welcome",[
-            function(session){
-                session.beginDialog("setLanguage");
-            },
+            // function(session){
+            //     session.beginDialog("setLanguage");
+            // },
             function(session,results){
                 if(session.conversationData.name == null){
                     builder.Prompts.text(session,"askForEmail");
@@ -373,9 +373,9 @@ var program = {
             }
         ]);
         bot.dialog("invest",[
-            function(session){ 
-                session.beginDialog("setLanguage");
-            },
+            // function(session){ 
+            //     session.beginDialog("setLanguage");
+            // },
             function(session,args){
                 session.beginDialog("getname");    
             },
@@ -453,9 +453,9 @@ var program = {
             }
         ]);
         bot.dialog("wantToInvest",[
-            function(session){
-                session.beginDialog("setLanguage");
-            },
+            // function(session){
+            //     session.beginDialog("setLanguage");
+            // },
             function(session,results){
                 builder.Prompts.choice(session, "maybeinInvestor",program.Constants.YesNo[session.preferredLocale()],{listStyle: builder.ListStyle.button});
             },
