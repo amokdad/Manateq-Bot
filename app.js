@@ -629,7 +629,7 @@ bot.on('conversationUpdate', function (activity) {
     if (activity.membersAdded) {
         activity.membersAdded.forEach((identity) => {
             if (identity.id === activity.address.bot.id) {
-                   bot.beginDialog(activity.address, 'setLanguage');
+                   bot.beginDialog(activity.address, 'manualHelp');
              }
          });
     }
