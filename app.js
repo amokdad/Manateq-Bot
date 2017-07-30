@@ -24,7 +24,7 @@ server.post('/api/messages', connector.listen());
 // Receive messages from the user and respond by echoing each message back (prefixed with 'You said:')
 var bot = new builder.UniversalBot(connector,{
     localizerSettings: { 
-        defaultLocale: "en-US" 
+        defaultLocale: "en" 
     }   
 });
 
@@ -626,7 +626,7 @@ bot.on('conversationUpdate', function (activity) {
     if (activity.membersAdded) {
         activity.membersAdded.forEach((identity) => {
             if (identity.id === activity.address.bot.id) {
-                   bot.beginDialog(activity.address, 'setLanguageWithPic');
+                   bot.beginDialog(activity.address, 'welcome');
              }
          });
     }
