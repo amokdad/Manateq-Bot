@@ -358,6 +358,7 @@ var program = {
             //     session.beginDialog("setLanguage");
             // },
             function(session,results){
+                session.send("welcomedsadsad");
                 if(session.conversationData.name == null){
                     builder.Prompts.text(session,"askForEmail");
                 }
@@ -580,6 +581,7 @@ var program = {
             },
             function(session,results){
                var locale = program.Helpers.GetLocal(results.response.index);
+               session.send(locale);
                session.conversationData.lang = locale;
                session.preferredLocale(locale,function(err){
                    if(!err){
