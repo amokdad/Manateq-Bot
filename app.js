@@ -474,7 +474,8 @@ var program = {
         bot.dialog("manualHelp",[
             function(session){
                 var locale = session.preferredLocale();
-                builder.Prompts.choice(session, "manualHelp", program.Options.ManualHelp[locale],{listStyle: builder.ListStyle.button});
+                session.send(locale);
+                builder.Prompts.choice(session, "manualHelpText", program.Options.ManualHelp[locale],{listStyle: builder.ListStyle.button});
             },
             function(session,results){
                 var locale = session.preferredLocale();
