@@ -45,7 +45,9 @@ var QnaRecognizer = new cognitiveservices.QnAMakerRecognizer({
 var intents = new builder.IntentDialog({ recognizers: [recognizer, 
     QnaRecognizer,
     ArabicRecognizers.investRecognizer,
-    ArabicRecognizers.greetingRecognizer] 
+    ArabicRecognizers.greetingRecognizer,
+    ArabicRecognizers.arabicRecognizer,
+    ArabicRecognizers.englishRecognizer] 
 })
 .matches('Greeting',(session, args) => {
     session.beginDialog("welcome");
