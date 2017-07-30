@@ -364,6 +364,7 @@ var program = {
                 }
                 else{
                     session.send("greetingAgain",session.conversationData.name)
+                    session.endDialog();
                 }
             },
             function(session,results){
@@ -478,40 +479,43 @@ var program = {
             function(session,results){
                 var locale = session.preferredLocale();
                 var result = program.Options.ManualHelp[locale][results.response.entity];
+                session.dialogData.item = result;
                 if(!result.Cards)
                 {
-                    session.dialogData.item = result;
+                    
                     builder.Prompts.choice(session, result.Description, result.Items,{listStyle: builder.ListStyle.button});
                 }
                 else{
                     var msg = new builder.Message(session);
                     msg.attachmentLayout(builder.AttachmentLayout.carousel);
                     var attachments = [];
+                    var txt = session.localizer.gettext(session.preferredLocale(),"select");
                     for(var i in result.Items)
                     {
                         attachments.push(
                              new builder.ThumbnailCard(session)
                             .title(result.Items[i].Title)
-                            .text(result.Items[i].Description)
+                            .text(result.Items[i].Description.substring(0,150)+"...")
                             .images([builder.CardImage.create(session, result.Items[i].Image)])
                             .buttons([
-                                builder.CardAction.imBack(session, result.Items[i].Title, "Buy")
+                                builder.CardAction.imBack(session, result.Items[i].Title, txt)
                             ])
                         );
                     }
                     msg.attachments(attachments);
-                    session.send(msg).endDialog();
+                    //session.send(msg);
+                    builder.Prompts.choice(session, msg, result.Items);
                 }
             },
             function(session,results){
-
                 var item = session.dialogData.item.Items[results.response.entity];
+                
                 if(item.Cards)
                 {
                     var msg = new builder.Message(session);
                     msg.attachmentLayout(builder.AttachmentLayout.carousel);
                     msg.attachments([
-                        new builder.ThumbnailCard(session)
+                        new builder.HeroCard(session)
                         .title(item.Title)
                         .text(item.Description)
                         .images([builder.CardImage.create(session, item.Image)])
@@ -609,7 +613,7 @@ bot.dialog('showShirts', function (session) {
     ]);
     session.send(msg).endDialog();
 }).triggerAction({ matches: /^(show|list)/i });
-/*
+
 bot.on('conversationUpdate', function (activity) {  
     if (activity.membersAdded) {
         activity.membersAdded.forEach((identity) => {
@@ -621,7 +625,7 @@ bot.on('conversationUpdate', function (activity) {
             }
         });
     }
-});*/
+});
 
 
 
