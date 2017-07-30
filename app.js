@@ -556,30 +556,22 @@ var program = {
         ]);
         bot.dialog("setLanguageWithPic",[
             function(session){
-                if(session.conversationData.lang == null)
-                {
+                var msg = new builder.Message(session);
+                msg.attachmentLayout(builder.AttachmentLayout.carousel);
+                var attachments = [];
+                var txt = session.localizer.gettext("en","selectYourLanguage");
+                msg.attachments([
+                new builder.HeroCard(session)
+                    .title("Manateq")
+                    .text(txt)
+                    .images([builder.CardImage.create(session, "https://www.manateq.qa/Style%20Library/MTQ/Images/logo.png")])
+                    .buttons([
+                        builder.CardAction.imBack(session, "English", "English"),
+                        builder.CardAction.imBack(session, "العربية", "العربية"),
+                    ])
+                ]);
                 
-                    var msg = new builder.Message(session);
-                    msg.attachmentLayout(builder.AttachmentLayout.carousel);
-                    var attachments = [];
-                    var txt = session.localizer.gettext("en","selectYourLanguage");
-                    msg.attachments([
-                    new builder.HeroCard(session)
-                        .title("Manateq")
-                        .text(txt)
-                        .images([builder.CardImage.create(session, "https://www.manateq.qa/Style%20Library/MTQ/Images/logo.png")])
-                        .buttons([
-                            builder.CardAction.imBack(session, "English", "English"),
-                            builder.CardAction.imBack(session, "العربية", "العربية"),
-                        ])
-                    ]);
-                    
-                    builder.Prompts.choice(session, msg, "العربية|English");
-                    
-                }else{
-                    session.send("end dialog in first function");
-                    session.endDialog();
-                }
+                builder.Prompts.choice(session, msg, "العربية|English");
             },
             function(session,results){
                 session.send(results.response.index);
