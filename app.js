@@ -558,7 +558,6 @@ var program = {
             function(session){
                 var msg = new builder.Message(session);
                 msg.attachmentLayout(builder.AttachmentLayout.carousel);
-                var attachments = [];
                 var txt = session.localizer.gettext("en","selectYourLanguage");
                 msg.attachments([
                 new builder.HeroCard(session)
@@ -570,11 +569,10 @@ var program = {
                         builder.CardAction.imBack(session, "العربية", "العربية"),
                     ])
                 ]);
-                
                 builder.Prompts.choice(session, msg, "العربية|English");
             },
             function(session,results){
-                session.send(results.response.index);
+               session.send(results.response.index);
                var locale = program.Helpers.GetLocal(results.response.index);
                session.conversationData.lang = locale;
                session.preferredLocale(locale,function(err){
@@ -631,7 +629,7 @@ bot.on('conversationUpdate', function (activity) {
     if (activity.membersAdded) {
         activity.membersAdded.forEach((identity) => {
             if (identity.id === activity.address.bot.id) {
-                   bot.beginDialog(activity.address, 'setLanguageWithPic');
+                   bot.beginDialog(activity.address, 'setLanguage');
              }
          });
     }
