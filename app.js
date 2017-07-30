@@ -85,7 +85,7 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer,
 var program = {
     Constants:{
         questionsBeforeInvest : 5,
-        questionBeforeGenericHelp : 0,
+        questionBeforeGenericHelp : 3,
         EmailTemplate : {
             Content:{
                 en:"Dear {{user}} <br/> Thanks alot for your interest in investing in Manateq, our team will study your inquiry and will get back to you as soon as possible",
@@ -466,7 +466,7 @@ var program = {
                     session.replaceDialog("invest");
                 }
                 else{
-                    session.send("Okay, Thanks")
+                    session.send("thanks")
                     session.endDialog();
                 }
             }
@@ -591,28 +591,6 @@ var program = {
 }
 
 program.Init();
-
-bot.dialog('showShirts', function (session) {
-    var msg = new builder.Message(session);
-    msg.attachmentLayout(builder.AttachmentLayout.carousel)
-    msg.attachments([
-        new builder.HeroCard(session)
-            .title("Classic White T-Shirt")
-            .subtitle("100% Soft and Luxurious Cotton")
-            .text("Price is $25 and carried in sizes (S, M, L, and XL)")
-            .images([builder.CardImage.create(session, 'http://petersapparel.parseapp.com/img/whiteshirt.png')])
-            ,
-        new builder.HeroCard(session)
-            .title("Classic Gray T-Shirt")
-            .subtitle("100% Soft and Luxurious Cotton")
-            .text("Price is $25 and carried in sizes (S, M, L, and XL)")
-            .images([builder.CardImage.create(session, 'http://petersapparel.parseapp.com/img/grayshirt.png')])
-            .buttons([
-                builder.CardAction.imBack(session, "buy classic gray t-shirt", "Buy")
-            ])
-    ]);
-    session.send(msg).endDialog();
-}).triggerAction({ matches: /^(show|list)/i });
 
 bot.on('conversationUpdate', function (activity) {  
     if (activity.membersAdded) {

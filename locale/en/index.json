@@ -1,4 +1,8 @@
 {
+    "botbuilder:default_choice":"I didn't understand. Please choose an option from the list",
+    "thanks": "Thanks",
+    "select":"select",
+    "choice_prompt" : "please select from the options above",
     "manualHelp" : "Please select one of below areas",
     "firstNamePlease" :"Great, please can I have your full name",
     "welcome" : "Hi, how may i help you?",
