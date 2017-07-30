@@ -359,6 +359,7 @@ var program = {
             // },
             function(session,results){
                 session.send("welcomedsadsad");
+                session.send(session.preferredLocale());
                 if(session.conversationData.name == null){
                     builder.Prompts.text(session,"askForEmail");
                 }
@@ -576,12 +577,13 @@ var program = {
                     builder.Prompts.choice(session, msg, "العربية|English");
                     
                 }else{
+                    session.send("end dialog in first function");
                     session.endDialog();
                 }
             },
             function(session,results){
+                session.send(results.response.index);
                var locale = program.Helpers.GetLocal(results.response.index);
-               session.send(locale);
                session.conversationData.lang = locale;
                session.preferredLocale(locale,function(err){
                    if(!err){
