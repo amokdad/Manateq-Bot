@@ -583,7 +583,7 @@ var program = {
                session.conversationData.lang = locale;
                session.preferredLocale(locale,function(err){
                    if(!err){
-                      session.send("welcome");
+                      session.send("welcomeText");
                       session.endDialog();
                    }
                });

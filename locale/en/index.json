@@ -5,7 +5,7 @@
     "choice_prompt" : "please select from the options above",
     "manualHelpText" : "Please select one of below areas",
     "firstNamePlease" :"Great, please can I have your full name",
-    "welcome" : "Hi, how may i help you?",
+    "welcomeText" : "Hi, how may i help you?",
     "validEmail":"please enter a valid email",
     "enterEmail" :"please enter your email",
     "askForEmail" : "Hi, please let me know whats is your name",
