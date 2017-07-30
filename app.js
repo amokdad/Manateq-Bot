@@ -358,8 +358,6 @@ var program = {
             //     session.beginDialog("setLanguage");
             // },
             function(session,results){
-                session.send("welcomedsadsad");
-                session.send(session.preferredLocale());
                 if(session.conversationData.name == null){
                     builder.Prompts.text(session,"askForEmail");
                 }
@@ -572,7 +570,6 @@ var program = {
                 builder.Prompts.choice(session, msg, "العربية|English");
             },
             function(session,results){
-               session.send(results.response.index);
                var locale = program.Helpers.GetLocal(results.response.index);
                session.conversationData.lang = locale;
                session.preferredLocale(locale,function(err){
@@ -629,7 +626,7 @@ bot.on('conversationUpdate', function (activity) {
     if (activity.membersAdded) {
         activity.membersAdded.forEach((identity) => {
             if (identity.id === activity.address.bot.id) {
-                   bot.beginDialog(activity.address, 'manualHelp');
+                   bot.beginDialog(activity.address, 'setLanguageWithPic');
              }
          });
     }
