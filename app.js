@@ -24,7 +24,7 @@ server.post('/api/messages', connector.listen());
 // Receive messages from the user and respond by echoing each message back (prefixed with 'You said:')
 var bot = new builder.UniversalBot(connector,{
     localizerSettings: { 
-        defaultLocale: "en" 
+        defaultLocale: "en-US" 
     }   
 });
 
