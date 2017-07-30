@@ -32,6 +32,8 @@ var bot = new builder.UniversalBot(connector,{
 var ArabicRecognizers = {
         investRecognizer : new builder.RegExpRecognizer( "Invest", /(مستثمر|إستثمار|أريد أن استثمر)/i),
         greetingRecognizer : new builder.RegExpRecognizer( "Greeting", /(السلام عليكم|صباح الخير|مساء الخير|مرحباً)/i),
+        arabicRecognizer : new builder.RegExpRecognizer( "Arabic", /(العربية)/i), 
+        englishRecognizer : new builder.RegExpRecognizer( "English", /(English)/i)
     }
 
 var recognizer = new builder.LuisRecognizer("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/0cfcf9f6-0ad6-47c3-bd2a-094f979484db?subscription-key=13b10b366d2743cda4d800ff0fd10077&timezoneOffset=0&verbose=true&q=");
@@ -81,6 +83,22 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer,
         
     }
 ])
+.matches('English',(session, args) => {
+    session.preferredLocale("en",function(err){
+        if(!err){
+            session.send("welcomeText");
+            session.endDialog();
+        }
+     });
+})
+.matches('Arabic',(session, args) => {
+    session.preferredLocale("ar",function(err){
+        if(!err){
+            session.send("welcomeText");
+            session.endDialog();
+        }
+     });
+})
 var program = {
     Constants:{
         questionsBeforeInvest : 5,
@@ -568,7 +586,8 @@ var program = {
                     ])
                 ]);
                 builder.Prompts.choice(session, msg, "العربية|English");
-            },
+            }
+            ,
             function(session,results){
                var locale = program.Helpers.GetLocal(results.response.index);
                session.conversationData.lang = locale;
@@ -626,7 +645,7 @@ bot.on('conversationUpdate', function (activity) {
     if (activity.membersAdded) {
         activity.membersAdded.forEach((identity) => {
             if (identity.id === activity.address.bot.id) {
-                   bot.beginDialog(activity.address, 'welcome');
+                   bot.beginDialog(activity.address, 'setLanguageWithPic');
              }
          });
     }
