@@ -52,12 +52,11 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer,
     session.beginDialog("wantToInvest");
 })
 .matches('None',(session, args) => {
+    session.send("cannotUnderstand");
     if(session.conversationData.unknown != null){
-        session.send("cannotUnderstand");
         session.conversationData.unknown++;
     }
     else{
-        session.send("cannotUnderstand");
         session.conversationData.unknown=0;
     }
     if(session.conversationData.unknown >= program.Constants.questionBeforeGenericHelp){
@@ -474,7 +473,6 @@ var program = {
         bot.dialog("manualHelp",[
             function(session){
                 var locale = session.preferredLocale();
-                session.send(locale);
                 builder.Prompts.choice(session, "manualHelpText", program.Options.ManualHelp[locale],{listStyle: builder.ListStyle.button});
             },
             function(session,results){
@@ -494,7 +492,7 @@ var program = {
                     for(var i in result.Items)
                     {
                         attachments.push(
-                             new builder.ThumbnailCard(session)
+                             new builder.HeroCard(session)
                             .title(result.Items[i].Title)
                             .text(result.Items[i].Description.substring(0,150)+"...")
                             .images([builder.CardImage.create(session, result.Items[i].Image)])
@@ -547,12 +545,52 @@ var program = {
                session.conversationData.lang = locale;
                session.preferredLocale(locale,function(err){
                    if(!err){
+                      session.send("welcome");
+                      session.endDialog();
+                   }
+               });
+               
+            }
+        ]);
+        bot.dialog("setLanguageWithPic",[
+            function(session){
+                if(session.conversationData.lang == null)
+                {
+                
+                    var msg = new builder.Message(session);
+                    msg.attachmentLayout(builder.AttachmentLayout.carousel);
+                    var attachments = [];
+                    var txt = session.localizer.gettext("en","selectYourLanguage");
+                    msg.attachments([
+                    new builder.HeroCard(session)
+                        .title("Manateq")
+                        .text(txt)
+                        .images([builder.CardImage.create(session, "https://www.manateq.qa/Style%20Library/MTQ/Images/logo.png")])
+                        .buttons([
+                            builder.CardAction.imBack(session, "English", "English"),
+                            builder.CardAction.imBack(session, "العربية", "العربية"),
+                        ])
+                    ]);
+                    
+                    builder.Prompts.choice(session, msg, "العربية|English");
+                    
+                }else{
+                    session.endDialog();
+                }
+            },
+            function(session,results){
+               var locale = program.Helpers.GetLocal(results.response.index);
+               session.conversationData.lang = locale;
+               session.preferredLocale(locale,function(err){
+                   if(!err){
+                      session.send("welcome");
                       session.endDialog();
                    }
                });
                
             }
         ])
+
     },
     Helpers: {
         GetLocal : function(val){
@@ -597,14 +635,13 @@ bot.on('conversationUpdate', function (activity) {
     if (activity.membersAdded) {
         activity.membersAdded.forEach((identity) => {
             if (identity.id === activity.address.bot.id) {
-                var reply = new builder.Message()
-                    .address(activity.address)
-                    .text('Welcome to manateq, how can i help you - أهلاً وسهلاً، كيف يمكنني مساعدتك');
-                bot.send(reply);
-            }
-        });
+                   bot.beginDialog(activity.address, 'setLanguageWithPic');
+             }
+         });
     }
-});
+ });
+
+
 
 
 
