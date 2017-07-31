@@ -53,7 +53,13 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer,
     session.beginDialog("welcome");
 })
 .matches('Invest',(session, args) => {
-    session.beginDialog("wantToInvest");
+    if(!session.conversationData.applicationSubmitted)
+    {
+        session.beginDialog("wantToInvest");
+    }
+    else{
+        session.endDialog();
+    }
 })
 .matches('None',(session, args) => {
     session.send("cannotUnderstand");
@@ -107,8 +113,8 @@ var program = {
         questionBeforeGenericHelp : 3,
         EmailTemplate : {
             Content:{
-                en:"Dear {{user}} <br/> Thanks alot for your interest in investing in Manateq, our team will study your inquiry and will get back to you as soon as possible",
-                ar:"عزيزي {{user}} <br/> شكراً على اهتمامك بالاستثمار في مناطق، سوف نقوم بدراسة طلبك والرد عليك بأقرب فرصة ممكنة"
+                en:"Dear {{user}} <br/> Thanks alot for your interest in investing in Manateq, our team will study your inquiry and will get back to you as soon as possible <br/><table border=1><tr><td>Mobile</td><td>{{mobile}}</td></tr><tr><td>Zone</td><td>{{zone}}</td></tr><tr><td>Sector</td><td>{{sector}}</td></tr><tr><td>Operation</td><td>{{operation}}</td></tr><tr><td>Heard</td><td>{{heard}}</td></tr><tr><td>Comment</td><td>{{comment}}</td></tr></table><br/>Regards,<br/>Manateq Team",
+                ar:"<div style='direction:rtl'> عزيزي {{user}} <br/> شكراً على اهتمامك بالاستثمار في مناطق، سوف نقوم بدراسة طلبك والرد عليك بأقرب فرصة ممكنة <br/><br/><table border=1><tr><td>رقم جوالك</td><td>{{mobile}}</td></tr><tr><td>اهتماماتك</td><td>{{zone}}</td></tr><tr><td> قطاع</td><td>{{sector}}</td></tr><tr><td>نوع العمل</td><td>{{operation}}</td></tr><tr><td>كيف سمعت عن شركة مناطق؟</td><td>{{heard}}</td></tr><tr><td>الاستعلام عنه</td><td>{{comment}}</td></tr></table><br/> مع تحيات فريق عمل مناطق</div>"
             },
             Subject:{
                 en:"Thanks from Manateq",
@@ -405,8 +411,8 @@ var program = {
             },
             function(session,results){ //get mobile
                 session.dialogData.email = results.response;
-                builder.Prompts.text(session,"getMobileNumber");
-               
+                //builder.Prompts.text(session,"getMobileNumber");
+                session.beginDialog("getMobile");
             },
             function(session,results){ //get zone
                 session.dialogData.mobile = results.response;
@@ -414,18 +420,18 @@ var program = {
                 builder.Prompts.choice(session, "getZones", zones,{listStyle: builder.ListStyle.button});
             },
             function(session,results){ //get sector
-                session.dialogData.zone = results.response;
+                session.dialogData.zone = results.response.entity;
                 var sectors = program.Helpers.GetOptions(program.Options.Sectors,session.preferredLocale());
                 builder.Prompts.choice(session, "getSectors", sectors,{listStyle: builder.ListStyle.button});
             },
             function(session,results){ //get operation
-                session.dialogData.sector = results.response;
+                session.dialogData.sector = results.response.entity;
                 var operations = program.Helpers.GetOptions(program.Options.Operations,session.preferredLocale());
                 //نوع العمل الذي ترغب بتأسيسة
                 builder.Prompts.choice(session, "getOperations", operations,{listStyle: builder.ListStyle.button});
             },
             function(session,results){ //get how you heard about us
-                session.dialogData.operation = results.response;
+                session.dialogData.operation = results.response.entity;
                 builder.Prompts.text(session, "getHowYouHeard");
             },
             function(session,results){ //get comment
@@ -434,8 +440,18 @@ var program = {
             },
             function(session,results){ // end
                 session.dialogData.comment = results.response;
+                
                 //Send Email
-                program.Helpers.SendEmail({email:session.dialogData.email,user:session.dialogData.name},session.preferredLocale());
+                program.Helpers.SendEmail({
+                    email:session.dialogData.email,
+                    user:session.dialogData.name,
+                    mobile:session.dialogData.mobile,
+                    zone:session.dialogData.zone,
+                    sector:session.dialogData.sector,
+                    operation:session.dialogData.operation,
+                    heard:session.dialogData.heard,
+                    comment:session.dialogData.comment
+                },session.preferredLocale());
                 session.send("thanksInquiry",session.dialogData.email);
                 session.conversationData.applicationSubmitted = true;
                 session.endDialog();
@@ -472,6 +488,23 @@ var program = {
                     session.replaceDialog('getEmail', { reprompt: true });
             }
         ]);
+        bot.dialog("getMobile",[
+            function(session,args){
+                if (args && args.reprompt) {
+                    builder.Prompts.text(session, "validMobile");
+                } else {
+                builder.Prompts.text(session, "getMobileNumber");
+                }
+            },
+            function(session,results)
+            {
+                var re = /[0-9]{8}/;
+                if(re.test(results.response))
+                    session.endDialogWithResult(results);
+                else
+                    session.replaceDialog('getMobile', { reprompt: true });
+            }
+        ]);
         bot.dialog("wantToInvest",[
             // function(session){
             //     session.beginDialog("setLanguage");
@@ -485,7 +518,8 @@ var program = {
                     session.replaceDialog("invest");
                 }
                 else{
-                    session.send("thanks")
+                    session.send("thanks");
+                    session.conversationData.applicationSubmitted = true;
                     session.endDialog();
                 }
             }
@@ -615,6 +649,12 @@ var program = {
             var html = program.Constants.EmailTemplate.Content[locale];
             var subject = program.Constants.EmailTemplate.Subject[locale];
             html = html.replace("{{user}}",data.user);
+            html = html.replace("{{mobile}}",data.mobile);
+            html = html.replace("{{zone}}",data.zone);
+            html = html.replace("{{sector}}",data.sector);
+            html = html.replace("{{operation}}",data.operation);
+            html = html.replace("{{heard}}",data.heard);
+            html = html.replace("{{comment}}",data.comment);
             var transporter = nodemailer.createTransport({
                 service: 'gmail',
                 auth: {
