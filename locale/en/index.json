@@ -3,7 +3,7 @@
     "thanks": "Thanks, please feel free to ask more questions.",
     "select":"select",
     "choice_prompt" : "please select from the options above",
-    "manualHelpText" : "Please select one of below areas",
+    "manualHelpText" : "I’m sorry but I didn’t understand your question.<br/>Please select one of the below choices so I can help you further.",
     "firstNamePlease" :"Great, please can I have your full name",
     "welcomeText" : "Hi, how may i help you?",
     "validMobile":"please enter a valid mobile number",

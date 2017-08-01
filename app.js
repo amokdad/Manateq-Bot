@@ -36,7 +36,8 @@ var ArabicRecognizers = {
         englishRecognizer : new builder.RegExpRecognizer( "English", /(English)/i)
     }
 
-var recognizer = new builder.LuisRecognizer("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/0cfcf9f6-0ad6-47c3-bd2a-094f979484db?subscription-key=13b10b366d2743cda4d800ff0fd10077&timezoneOffset=0&verbose=true&q=");
+//var recognizer = new builder.LuisRecognizer("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/0cfcf9f6-0ad6-47c3-bd2a-094f979484db?subscription-key=13b10b366d2743cda4d800ff0fd10077&timezoneOffset=0&verbose=true&q=");
+var recognizer = new builder.LuisRecognizer("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/84d08076-0512-494a-980a-15a7373c53e4?subscription-key=13b10b366d2743cda4d800ff0fd10077&verbose=true&timezoneOffset=0&q=");
 var QnaRecognizer = new cognitiveservices.QnAMakerRecognizer({
 	knowledgeBaseId: "83feeddc-ec61-4bd8-88b7-255b451c86ac", 
     subscriptionKey: "5721988f51b24dc9b2fa7bf95bb6b7c9"});
@@ -49,9 +50,26 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer,
     ArabicRecognizers.arabicRecognizer,
     ArabicRecognizers.englishRecognizer] 
 })
+.matches("Want",(session,args)=>{
+    var isInvestment = program.Helpers.IsInvestmentIntent(args);
+    if(isInvestment){
+        if(!session.conversationData.applicationSubmitted)
+        {
+            session.beginDialog("wantToInvest");
+        }
+        else{
+            session.endDialog();
+        }
+    }
+    else{
+        session.send("cannotUnderstand");;
+        session.endDialog();
+    }
+})
 .matches('Greeting',(session, args) => {
     session.beginDialog("welcome");
 })
+/*
 .matches('Invest',(session, args) => {
     if(!session.conversationData.applicationSubmitted)
     {
@@ -60,18 +78,25 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer,
     else{
         session.endDialog();
     }
-})
+})*/
 .matches('None',(session, args) => {
-    session.send("cannotUnderstand");
+    
     if(session.conversationData.unknown != null){
+        
         session.conversationData.unknown++;
+
+        if(session.conversationData.unknown >= program.Constants.questionBeforeGenericHelp){
+        session.beginDialog("manualHelp");
+        }
+        else{
+            session.send("cannotUnderstand");
+        }
     }
     else{
+        session.send("cannotUnderstand");
         session.conversationData.unknown=0;
     }
-    if(session.conversationData.unknown >= program.Constants.questionBeforeGenericHelp){
-        session.beginDialog("manualHelp");
-    }
+   
 })
 .matches('qna',[
     function (session, args, next) {
@@ -205,6 +230,7 @@ var program = {
                 "مكاتب التسويق / المبيعات":{Description:"مكاتب التسويق / المبيعات"}
             }
         },
+        /*
         ManualHelp:{
             en:{
                 "Location":{ 
@@ -352,6 +378,36 @@ var program = {
                     }   
                 }
             }
+        },*/
+         ManualHelp:{
+            en:{
+                "Call Us":{ 
+                    Title:"Call Us", 
+                    Description:"+974 40323333",        
+                },
+                "Visit Us":{
+                    Title:"Visit Us", 
+                    Description:"Visit Us",  
+                },
+                "Ask us to call you back":{
+                    Title:"Ask us to call you back", 
+                    Description:"please select one of the below",   
+                }
+            },
+            ar:{
+                "اتصل بنا عبر الهاتف":{ 
+                    Title:"اتصل بنا عبر الهاتف", 
+                    Description:"+974 40323333",        
+                },
+                "زرنا في مكاتبنا":{
+                    Title:"زرنا في مكاتبنا", 
+                    Description:"زرنا في مكاتبنا",  
+                },
+                "اطلب منا ان نتصل بك":{
+                    Title:"اطلب منا ان نتصل بك", 
+                    Description:"please select one of the below",   
+                }
+            },
         },
         Languages:"العربية|English"
     },
@@ -526,6 +582,27 @@ var program = {
         ]);
         bot.dialog("manualHelp",[
             function(session){
+                
+                var locale = session.preferredLocale();
+                builder.Prompts.choice(session, "manualHelpText", program.Options.ManualHelp[locale],{listStyle: builder.ListStyle.button});
+            },
+            function(session,results){
+                var index = JSON.stringify(results.response.index);
+                var locale = session.preferredLocale();
+                if(index == 0){
+                    session.send(program.Options.ManualHelp[locale][results.response.entity].Description).endDialog();
+                }
+                if(index == 1){
+                    session.send("<iframe style='height:300px' src='https://gis.manateq.qa/manateq/manateqmain.aspx?language=ar'></iframe>").endDialog();
+                }
+                //program.Options.ManualHelp[locale]
+                if(index == 2){
+                    session.replaceDialog("invest");
+                }
+            }])
+        /*
+        bot.dialog("manualHelp",[
+            function(session){
                 var locale = session.preferredLocale();
                 builder.Prompts.choice(session, "manualHelpText", program.Options.ManualHelp[locale],{listStyle: builder.ListStyle.button});
             },
@@ -585,6 +662,7 @@ var program = {
                 
             },
         ]);
+        */
         bot.dialog("setLanguage",[
             function(session){
                 if(session.conversationData.lang == null)
@@ -676,6 +754,14 @@ var program = {
                 console.log('Email sent: ' + info.response);
             }
             });
+        },
+        IsInvestmentIntent: function(args){
+            if(args.entities == null || args.entities.length == 0)
+                return false;
+            return args.entities[0].entity == "invest" || 
+            args.entities[0].entity == "investment" ||
+            args.entities[0].entity == "investing" ||
+            args.entities[0].entity == "land";
         }
     } 
  
