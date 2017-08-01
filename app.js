@@ -690,7 +690,7 @@ var program = {
                 msg.attachmentLayout(builder.AttachmentLayout.carousel);
                 var txt = session.localizer.gettext("en","selectYourLanguage");
                 msg.attachments([
-                new builder.ThumbnailCard(session)
+                new builder.HeroCard(session)
                     .title("Manateq")
                     .text(txt)
                     .images([builder.CardImage.create(session, "https://www.manateq.qa/Style%20Library/MTQ/Images/logo.png")])
