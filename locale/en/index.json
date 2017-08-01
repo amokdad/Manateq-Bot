@@ -1,4 +1,5 @@
 {
+    "alreadySubmitted" :"You have previously filled the Investors Enquiry Form or have chosen not to fill it. If you would like us to contact you, please select Yes to contact you, or No to ask a different question.",
     "botbuilder:default_choice":"I didn't understand. Please choose an option from the list",
     "thanks": "Thanks, please feel free to ask more questions.",
     "select":"select",

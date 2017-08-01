@@ -37,28 +37,31 @@ var ArabicRecognizers = {
     }
 
 //var recognizer = new builder.LuisRecognizer("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/0cfcf9f6-0ad6-47c3-bd2a-094f979484db?subscription-key=13b10b366d2743cda4d800ff0fd10077&timezoneOffset=0&verbose=true&q=");
-var recognizer = new builder.LuisRecognizer("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/84d08076-0512-494a-980a-15a7373c53e4?subscription-key=13b10b366d2743cda4d800ff0fd10077&verbose=true&timezoneOffset=0&q=");
+var recognizer = new builder.LuisRecognizer("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/84d08076-0512-494a-980a-15a7373c53e4?subscription-key=bc421f45233241a4b761db52c6a65292&timezoneOffset=0&verbose=true&q=");
 var QnaRecognizer = new cognitiveservices.QnAMakerRecognizer({
 	knowledgeBaseId: "83feeddc-ec61-4bd8-88b7-255b451c86ac", 
     subscriptionKey: "5721988f51b24dc9b2fa7bf95bb6b7c9"});
+   
 // ------------------------------ End Recognizers ------------------------------   
 
-var intents = new builder.IntentDialog({ recognizers: [recognizer, 
+var intents = new builder.IntentDialog({ recognizers: [
     QnaRecognizer,
+    recognizer,
     ArabicRecognizers.investRecognizer,
     ArabicRecognizers.greetingRecognizer,
     ArabicRecognizers.arabicRecognizer,
-    ArabicRecognizers.englishRecognizer] 
+    ArabicRecognizers.englishRecognizer
+    ] 
 })
 .matches("Want",(session,args)=>{
     var isInvestment = program.Helpers.IsInvestmentIntent(args);
     if(isInvestment){
         if(!session.conversationData.applicationSubmitted)
         {
-            session.beginDialog("wantToInvest");
+            session.replaceDialog("wantToInvest");
         }
         else{
-            session.endDialog();
+            session.replaceDialog("askagain");
         }
     }
     else{
@@ -435,6 +438,24 @@ var program = {
     },
     RegisterDialogs : function(){
 
+         bot.dialog("askagain",[
+            // function(session){
+            //     session.beginDialog("setLanguage");
+            // },
+            function(session,results){
+               builder.Prompts.choice(session, "alreadySubmitted" ,program.Constants.YesNo[session.preferredLocale()],{listStyle: builder.ListStyle.button});
+            },
+            function(session,results){
+                var index = results.response.index;
+                if(index==0)
+                {
+                    session.replaceDialog("invest");
+                }
+                else{
+                    session.endDialog();
+                }
+            }
+        ]);
         bot.dialog("welcome",[
             // function(session){
             //     session.beginDialog("setLanguage");
