@@ -30,7 +30,8 @@ var bot = new builder.UniversalBot(connector,{
 
 // ------------------------------ Recognizers ------------------------------
 var ArabicRecognizers = {
-        investRecognizer : new builder.RegExpRecognizer( "Invest", /(مستثمر|إستثمار|أريد أن استثمر)/i),
+        investRecognizer : new builder.RegExpRecognizer( "WantAR", /(^(?!(متى|كيف|هل|ما هو|ما هي|أين))(?=.*(إستثمار|مستثمر|أريد أن استثمر|أريد أن أصبح مستثمر)))/i),
+        //investRecognizer : new builder.RegExpRecognizer( "WantAR", /(مستثمر|إستثمار|أريد أن استثمر)/i),
         greetingRecognizer : new builder.RegExpRecognizer( "Greeting", /(السلام عليكم|صباح الخير|مساء الخير|مرحباً)/i),
         arabicRecognizer : new builder.RegExpRecognizer( "Arabic", /(العربية)/i), 
         englishRecognizer : new builder.RegExpRecognizer( "English", /(English)/i)
@@ -67,6 +68,15 @@ var intents = new builder.IntentDialog({ recognizers: [
     else{
         session.send("cannotUnderstand");;
         session.endDialog();
+    }
+})
+.matches("WantAR",(session,args)=>{
+    if(!session.conversationData.applicationSubmitted)
+    {
+        session.replaceDialog("wantToInvest");
+    }
+    else{
+        session.replaceDialog("askagain");
     }
 })
 .matches('Greeting',(session, args) => {
