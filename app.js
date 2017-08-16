@@ -27,7 +27,7 @@ var bot = new builder.UniversalBot(connector,{
         defaultLocale: "en" 
     }   
 });
-
+..
 // ------------------------------ Recognizers ------------------------------
 var ArabicRecognizers = {
         investRecognizer : new builder.RegExpRecognizer( "WantAR", /(^(?!(متى|كيف|هل|ما هو|ما هي|أين))(?=.*(إستثمار|مستثمر|أريد أن استثمر|أريد أن أصبح مستثمر)))/i),
@@ -675,7 +675,7 @@ var program = {
                     var msg = new builder.Message(session);
                     msg.attachmentLayout(builder.AttachmentLayout.carousel);
                     msg.attachments([
-                        new builder.HeroCard(session)
+                        new builder.HeroHeroCard(session)
                         .title(item.Title)
                         .text(item.Description)
                         .images([builder.CardImage.create(session, item.Image)])
