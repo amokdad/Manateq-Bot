@@ -45,9 +45,8 @@ var QnaRecognizer = new cognitiveservices.QnAMakerRecognizer({
    
 // ------------------------------ End Recognizers ------------------------------   
 
-var intents = new builder.IntentDialog({ recognizers: [
+var intents = new builder.IntentDialog({ recognizers: [recognizer,
     QnaRecognizer,
-    recognizer,
     ArabicRecognizers.investRecognizer,
     ArabicRecognizers.greetingRecognizer,
     ArabicRecognizers.arabicRecognizer,
