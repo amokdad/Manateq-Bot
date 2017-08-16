@@ -31,13 +31,15 @@ var bot = new builder.UniversalBot(connector,{
 // ------------------------------ Recognizers ------------------------------
 var ArabicRecognizers = {
         investRecognizer : new builder.RegExpRecognizer( "WantAR", /(^(?!(متى|كيف|هل|ما هو|ما هي|أين))(?=.*(إستثمار|مستثمر|أريد أن استثمر|أريد أن أصبح مستثمر)))/i),
+        
         //investRecognizer : new builder.RegExpRecognizer( "WantAR", /(مستثمر|إستثمار|أريد أن استثمر)/i),
         greetingRecognizer : new builder.RegExpRecognizer( "Greeting", /(السلام عليكم|صباح الخير|مساء الخير|مرحباً)/i),
         arabicRecognizer : new builder.RegExpRecognizer( "Arabic", /(العربية)/i), 
         englishRecognizer : new builder.RegExpRecognizer( "English", /(English)/i)
-    }
+}
 
-//var recognizer = new builder.LuisRecognizer("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/0cfcf9f6-0ad6-47c3-bd2a-094f979484db?subscription-key=13b10b366d2743cda4d800ff0fd10077&timezoneOffset=0&verbose=true&q=");
+//var recognizer=  new builder.RegExpRecognizer("Want", /(^(?!(how|how can i|how may i|what|which|when))(?=.*(invest|investment|rent a land|lease a land|investor)))/i);
+    
 var recognizer = new builder.LuisRecognizer("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/84d08076-0512-494a-980a-15a7373c53e4?subscription-key=bc421f45233241a4b761db52c6a65292&timezoneOffset=0&verbose=true&q=");
 var QnaRecognizer = new cognitiveservices.QnAMakerRecognizer({
 	knowledgeBaseId: "83feeddc-ec61-4bd8-88b7-255b451c86ac", 
@@ -45,16 +47,19 @@ var QnaRecognizer = new cognitiveservices.QnAMakerRecognizer({
    
 // ------------------------------ End Recognizers ------------------------------   
 
-var intents = new builder.IntentDialog({ recognizers: [recognizer,
-    QnaRecognizer,
+var intents = new builder.IntentDialog({ recognizers: [
+    recognizer,
+    
     ArabicRecognizers.investRecognizer,
     ArabicRecognizers.greetingRecognizer,
     ArabicRecognizers.arabicRecognizer,
-    ArabicRecognizers.englishRecognizer
+    ArabicRecognizers.englishRecognizer,
+    //QnaRecognizer
     ] 
 })
 .matches("Want",(session,args)=>{
-    var isInvestment = program.Helpers.IsInvestmentIntent(args);
+
+    var isInvestment = true;//program.Helpers.IsInvestmentIntent(args);
     if(isInvestment){
         if(!session.conversationData.applicationSubmitted)
         {
@@ -112,6 +117,7 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer,
 })
 .matches('qna',[
     function (session, args, next) {
+        //session.send(JSON.stringify(args))
         var answerEntity = builder.EntityRecognizer.findEntity(args.entities, 'answer');
         session.send(answerEntity.entity);
         if(session.conversationData.occurance != null){
@@ -136,6 +142,7 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer,
         }
      });
 })
+
 .matches('Arabic',(session, args) => {
     session.preferredLocale("ar",function(err){
         if(!err){
@@ -147,7 +154,7 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer,
 var program = {
     Constants:{
         questionsBeforeInvest : 5,
-        questionBeforeGenericHelp : 3,
+        questionBeforeGenericHelp : 2,
         EmailTemplate : {
             Content:{
                 en:"Dear {{user}} <br/> Thanks alot for your interest in investing in Manateq, our team will study your inquiry and will get back to you as soon as possible <br/><table border=1><tr><td>Mobile</td><td>{{mobile}}</td></tr><tr><td>Zone</td><td>{{zone}}</td></tr><tr><td>Sector</td><td>{{sector}}</td></tr><tr><td>Operation</td><td>{{operation}}</td></tr><tr><td>Heard</td><td>{{heard}}</td></tr><tr><td>Comment</td><td>{{comment}}</td></tr></table><br/>Regards,<br/>Manateq Team",
@@ -166,14 +173,14 @@ var program = {
     Options:{
         Zones: {
             en:{
-                "Ras Bufontas":{Description:"Ras Bufontas",Image:"https://image.ibb.co/m4NJba/Ras_Abu_Fountas.png"},
-                "Ym Alhaloul":{Description:"Ym Alhaloul",Image:"https://image.ibb.co/nb0RUv/Um_Al_Houl.png"},
-                //"I’m not sure":{Description:"I’m not sure",Image:"https://www.manateq.qa/Style%20Library/MTQ/Images/logo.png"}
+                "Ras Bufontas":{Content:"An area of 4.01 km², situated adjacent to Do​​ha’s new Hamad International Airport, Ras Bufontas is an ideal location for businesses requiring international connectivity",Description:"Ras Bufontas",Image:"https://image.ibb.co/m4NJba/Ras_Abu_Fountas.png"},
+                "Ym Alhaloul":{Content:"An area of 34 km², Um Alhoul is perfectly located to facilitate access to the rest of the world via the sea.",Description:"Ym Alhaloul",Image:"https://image.ibb.co/nb0RUv/Um_Al_Houl.png"},
+                "Al Karaana":{Content:"Al Karaana is Manateq's third Special Economic Zone. Full information and opportunities to invest in Al Karaana will be available in 2018. Al Karaana will be the overland gateway to GCC markets with its strategic location half way between Doha and Abu Sa​mra on the border of the King​dom of Saudi Arabia. With access to over 100 million customers",Description:"Al Karaana",Image:"https://image.ibb.co/iwPn2F/al_kaarna.png"}
             },
             ar:{
-                "راس أبوفنطاس":{Description:"راس أبوفنطاس",Image:"https://image.ibb.co/m4NJba/Ras_Abu_Fountas.png"},
-                "أم الهلول":{Description:"أم الهلول",Image:"https://image.ibb.co/nb0RUv/Um_Al_Houl.png"},
-                //"لست متأكد":{Description:"لست متأكد",Image:"https://www.manateq.qa/Style%20Library/MTQ/Images/logo.png"}
+                "راس أبوفنطاس":{Content:"تبلغ مساحة رأس بوفنطاس حوالي 4 كيلو متر مربع، وتقع هذه المنطقة بالقرب من مطار حمد الدولي، وتمتاز بموقعها المثالي للأعمال التي تستدعي التواصل على مستوى دولي",Description:"راس أبوفنطاس",Image:"https://image.ibb.co/m4NJba/Ras_Abu_Fountas.png"},
+                "أم الهلول":{Content:"تبلغ مساحة أم الحلول حوالي 43​كيلو مت​​​ر مربع، وتتمتع بموقع مميز يتيح حرية الوصول بسهولة إلى بقية دول العالم عبر البحر",Description:"أم الهلول",Image:"https://image.ibb.co/nb0RUv/Um_Al_Houl.png"},
+                "​​الكرعانة":{Content:"الكرعانة هي المنطقة الاقتصادية الخاصة الثالثة لشركة مناطق؛ وستتاح فرص الاستثمار في الكرعانة عام 2018. إن موقع الكرعانة ما بين الدوحة وأبو سمرا على حدود المملكة العربية السعودية سيجعلها البوابة البرية لأسواق دول مجلس التعاون الخليجي.",Description:"​​الكرعانة",Image:"https://image.ibb.co/iwPn2F/al_kaarna.png"}
             }
         },
         Sectors: {
@@ -404,6 +411,10 @@ var program = {
                 "Ask us to call you back":{
                     Title:"Ask us to call you back", 
                     Description:"please select one of the below",   
+                },
+                "Ask More Questions":{
+                    Title:"Ask More Questions", 
+                    Description:"Ask More Questions",   
                 }
             },
             ar:{
@@ -418,6 +429,10 @@ var program = {
                 "اطلب منا ان نتصل بك":{
                     Title:"اطلب منا ان نتصل بك", 
                     Description:"please select one of the below",   
+                },
+                "اود طرح المزيد من الاسئلة":{
+                    Title:"اود طرح المزيد من الاسئلة",
+                    Description:"اود طرح المزيد من الاسئلة",   
                 }
             },
         },
@@ -483,7 +498,8 @@ var program = {
                 session.conversationData.name = name;
                 session.endDialog("greetingAsk",name);
             }
-        ]);
+        ])
+
         bot.dialog("invest",[
             // function(session){ 
             //     session.beginDialog("setLanguage");
@@ -505,6 +521,7 @@ var program = {
                 //var zones = program.Helpers.GetOptions(program.Options.Zones,session.preferredLocale());
                 //builder.Prompts.choice(session, "getZones", zones,{listStyle: builder.ListStyle.button});
 
+                session.send("selectoption");
                 session.dialogData.mobile = results.response;
                 var zones = program.Helpers.GetOptions(program.Options.Zones,session.preferredLocale());
 
@@ -512,13 +529,13 @@ var program = {
                 msg.attachmentLayout(builder.AttachmentLayout.carousel);
                 var attachments = [];
                 var txt = session.localizer.gettext(session.preferredLocale(),"getZones");
-
+                msg.text = txt;
                 for(var i in zones)
                 {
                     attachments.push(
                          new builder.HeroCard(session)
-                        //.title(zones[i].Description)
-                        //.text(result.Items[i].Description.substring(0,150)+"...")
+                        .title(zones[i].Description)
+                        .text(zones[i].Content.substring(0,150)+"...")
                         .images([builder.CardImage.create(session, zones[i].Image)])
                         .buttons([
                             builder.CardAction.imBack(session, zones[i].Description, zones[i].Description)
@@ -564,6 +581,8 @@ var program = {
                 },session.preferredLocale());
                 session.send("thanksInquiry",session.dialogData.email);
                 session.conversationData.applicationSubmitted = true;
+
+                session.send("feelfreetoask");
                 session.endDialog();
             }
         ]);
@@ -636,7 +655,7 @@ var program = {
         ]);
         bot.dialog("manualHelp",[
             function(session){
-                
+                session.conversationData.unknown = 0;
                 var locale = session.preferredLocale();
                 builder.Prompts.choice(session, "manualHelpText", program.Options.ManualHelp[locale],{listStyle: builder.ListStyle.button});
             },
@@ -652,8 +671,10 @@ var program = {
                 //program.Options.ManualHelp[locale]
                 if(index == 2){
                     session.replaceDialog("invest");
+                }else{
+                    session.endDialog();
                 }
-            }])
+            }]).triggerAction({matches: /Main Menu|اللائحة الرئيسية/i});
         /*
         bot.dialog("manualHelp",[
             function(session){
