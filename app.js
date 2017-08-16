@@ -27,7 +27,7 @@ var bot = new builder.UniversalBot(connector,{
         defaultLocale: "en" 
     }   
 });
-..
+
 // ------------------------------ Recognizers ------------------------------
 var ArabicRecognizers = {
         investRecognizer : new builder.RegExpRecognizer( "WantAR", /(^(?!(متى|كيف|هل|ما هو|ما هي|أين))(?=.*(إستثمار|مستثمر|أريد أن استثمر|أريد أن أصبح مستثمر)))/i),
