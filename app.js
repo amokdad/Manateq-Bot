@@ -166,14 +166,14 @@ var program = {
     Options:{
         Zones: {
             en:{
-                "Ras Bufontas":{Description:"Ras Bufontas"},
-                "Ym Alhaloul":{Description:"Ym Alhaloul"},
-                "I’m not sure":{Description:"I’m not sure"}
+                "Ras Bufontas":{Description:"Ras Bufontas",Image:"https://image.ibb.co/m4NJba/Ras_Abu_Fountas.png"},
+                "Ym Alhaloul":{Description:"Ym Alhaloul",Image:"https://image.ibb.co/nb0RUv/Um_Al_Houl.png"},
+                //"I’m not sure":{Description:"I’m not sure",Image:"https://www.manateq.qa/Style%20Library/MTQ/Images/logo.png"}
             },
             ar:{
-                "راس أبوفنطاس":{Description:"راس أبوفنطاس"},
-                "أم الهلول":{Description:"أم الهلول"},
-                "لست متأكد":{Description:"لست متأكد"}
+                "راس أبوفنطاس":{Description:"راس أبوفنطاس",Image:"https://image.ibb.co/m4NJba/Ras_Abu_Fountas.png"},
+                "أم الهلول":{Description:"أم الهلول",Image:"https://image.ibb.co/nb0RUv/Um_Al_Houl.png"},
+                //"لست متأكد":{Description:"لست متأكد",Image:"https://www.manateq.qa/Style%20Library/MTQ/Images/logo.png"}
             }
         },
         Sectors: {
@@ -501,9 +501,33 @@ var program = {
                 session.beginDialog("getMobile");
             },
             function(session,results){ //get zone
+                //session.dialogData.mobile = results.response;
+                //var zones = program.Helpers.GetOptions(program.Options.Zones,session.preferredLocale());
+                //builder.Prompts.choice(session, "getZones", zones,{listStyle: builder.ListStyle.button});
+
                 session.dialogData.mobile = results.response;
                 var zones = program.Helpers.GetOptions(program.Options.Zones,session.preferredLocale());
-                builder.Prompts.choice(session, "getZones", zones,{listStyle: builder.ListStyle.button});
+
+                var msg = new builder.Message(session);
+                msg.attachmentLayout(builder.AttachmentLayout.carousel);
+                var attachments = [];
+                var txt = session.localizer.gettext(session.preferredLocale(),"getZones");
+
+                for(var i in zones)
+                {
+                    attachments.push(
+                         new builder.HeroCard(session)
+                        //.title(zones[i].Description)
+                        //.text(result.Items[i].Description.substring(0,150)+"...")
+                        .images([builder.CardImage.create(session, zones[i].Image)])
+                        .buttons([
+                            builder.CardAction.imBack(session, zones[i].Description, zones[i].Description)
+                        ])
+                    );
+                }
+                msg.attachments(attachments);
+                builder.Prompts.choice(session, msg, zones);
+
             },
             function(session,results){ //get sector
                 session.dialogData.zone = results.response.entity;
