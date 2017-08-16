@@ -54,7 +54,7 @@ var intents = new builder.IntentDialog({ recognizers: [
     ArabicRecognizers.greetingRecognizer,
     ArabicRecognizers.arabicRecognizer,
     ArabicRecognizers.englishRecognizer,
-    //QnaRecognizer
+    QnaRecognizer
     ] 
 })
 .matches("Want",(session,args)=>{
@@ -70,6 +70,7 @@ var intents = new builder.IntentDialog({ recognizers: [
         }
     }
     else{
+
         session.send("cannotUnderstand");;
         session.endDialog();
     }
@@ -97,7 +98,7 @@ var intents = new builder.IntentDialog({ recognizers: [
     }
 })*/
 .matches('None',(session, args) => {
-    
+    //need to fix the 
     if(session.conversationData.unknown != null){
         
         session.conversationData.unknown++;
@@ -655,7 +656,8 @@ var program = {
         ]);
         bot.dialog("manualHelp",[
             function(session){
-                session.conversationData.unknown = 0;
+                
+                session.conversationData.unknown = null;
                 var locale = session.preferredLocale();
                 builder.Prompts.choice(session, "manualHelpText", program.Options.ManualHelp[locale],{listStyle: builder.ListStyle.button});
             },
