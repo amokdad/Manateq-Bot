@@ -426,7 +426,7 @@ var program = {
     Init : function(){
         program.RegisterDialogs();
         bot.dialog("/",intents);
-    },
+    }, 
     IntentHelper:{
         url : "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/0cfcf9f6-0ad6-47c3-bd2a-094f979484db?subscription-key=13b10b366d2743cda4d800ff0fd10077&timezoneOffset=0&verbose=true&q=",
         GetIntent:function(search){
