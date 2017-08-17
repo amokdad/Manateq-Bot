@@ -3,7 +3,7 @@ var builder = require('botbuilder');
 var https = require('https');
 var cognitiveservices = require('botbuilder-cognitiveservices');
 var nodemailer = require('nodemailer');
-
+var request = require('request');
 Q = require('q');
 
 // Setup Restify Server
@@ -58,8 +58,8 @@ var intents = new builder.IntentDialog({ recognizers: [
     ] 
 })
 .matches("Want",(session,args)=>{
-
-    var isInvestment = true;//program.Helpers.IsInvestmentIntent(args);
+    //session.send("Want");
+    var isInvestment = program.Helpers.IsInvestmentIntent(args);
     if(isInvestment){
         if(!session.conversationData.applicationSubmitted)
         {
@@ -71,8 +71,23 @@ var intents = new builder.IntentDialog({ recognizers: [
     }
     else{
 
-        session.send("cannotUnderstand");;
-        session.endDialog();
+
+        var msg = session.message.text;
+         // session.send("dsa" + msg + "dsadsa");
+         // session.send(JSON.stringify(args))
+          request.post({
+            headers: {'content-type' : 'application/json','Ocp-Apim-Subscription-Key':'5721988f51b24dc9b2fa7bf95bb6b7c9'},
+            url:     'https://westus.api.cognitive.microsoft.com/qnamaker/v2.0/knowledgebases/83feeddc-ec61-4bd8-88b7-255b451c86ac/generateAnswer',
+            body:    "{question:'" + msg + "'}"
+          }, function(error, response, body){
+            //session.send(body);
+            session.send(JSON.parse(body).answers[0].answer);
+            session.endDialog();
+          });
+
+
+        //session.send("cannotUnderstand");;
+        //session.endDialog();
     }
 })
 .matches("WantAR",(session,args)=>{
@@ -98,6 +113,7 @@ var intents = new builder.IntentDialog({ recognizers: [
     }
 })*/
 .matches('None',(session, args) => {
+    
     //need to fix the 
     if(session.conversationData.unknown != null){
         
@@ -442,7 +458,7 @@ var program = {
     Init : function(){
         program.RegisterDialogs();
         bot.dialog("/",intents);
-    }, 
+    },
     IntentHelper:{
         url : "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/0cfcf9f6-0ad6-47c3-bd2a-094f979484db?subscription-key=13b10b366d2743cda4d800ff0fd10077&timezoneOffset=0&verbose=true&q=",
         GetIntent:function(search){
