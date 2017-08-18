@@ -4,6 +4,9 @@ var https = require('https');
 var cognitiveservices = require('botbuilder-cognitiveservices');
 var nodemailer = require('nodemailer');
 var request = require('request');
+var decode = require('decode-html');
+var striptags = require('striptags');
+var replaceall = require("replaceall");
 Q = require('q');
 
 // Setup Restify Server
@@ -56,7 +59,7 @@ var intents = new builder.IntentDialog({ recognizers: [
     ArabicRecognizers.englishRecognizer,
     QnaRecognizer
     ] 
-}) 
+})
 .matches("Want",(session,args)=>{
     //session.send("Want");
     var isInvestment = program.Helpers.IsInvestmentIntent(args);
@@ -81,7 +84,10 @@ var intents = new builder.IntentDialog({ recognizers: [
             body:    "{question:'" + msg + "'}"
           }, function(error, response, body){
             //session.send(body);
-            session.send(JSON.parse(body).answers[0].answer);
+            var answer = decode(JSON.parse(body).answers[0].answer).replace("<br/>","\n\n");
+            answer = replaceall("<br/>","\n\n",answer);
+            answer = striptags(answer);
+            session.send(answer);
             session.endDialog();
           });
 
@@ -136,6 +142,7 @@ var intents = new builder.IntentDialog({ recognizers: [
     function (session, args, next) {
         //session.send(JSON.stringify(args))
         var answerEntity = builder.EntityRecognizer.findEntity(args.entities, 'answer');
+        session.send(JSON.stringify(answerEntity.entity));
         session.send(answerEntity.entity);
         if(session.conversationData.occurance != null){
             session.conversationData.occurance++;
