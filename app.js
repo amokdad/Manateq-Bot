@@ -56,7 +56,7 @@ var intents = new builder.IntentDialog({ recognizers: [
     ArabicRecognizers.englishRecognizer,
     QnaRecognizer
     ] 
-})
+}) 
 .matches("Want",(session,args)=>{
     //session.send("Want");
     var isInvestment = program.Helpers.IsInvestmentIntent(args);
