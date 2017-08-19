@@ -81,7 +81,6 @@ var intents = new builder.IntentDialog({ recognizers: [
     ] ,recognizeOrder:"series"
 })
 .matches("Want",(session,args)=>{
-
     var msg = session.message.text;
     var isInvestment = program.Helpers.IsInvestmentIntent(args);
     var isquestion = program.Helpers.IsQuestion(msg);
@@ -95,26 +94,30 @@ var intents = new builder.IntentDialog({ recognizers: [
         }
     }
     else{
-        
          // session.send("dsa" + msg + "dsadsa");
          // session.send(JSON.stringify(args))
           request.post({
             headers: {'content-type' : 'application/json','Ocp-Apim-Subscription-Key':'5721988f51b24dc9b2fa7bf95bb6b7c9'},
             url:     'https://westus.api.cognitive.microsoft.com/qnamaker/v2.0/knowledgebases/83feeddc-ec61-4bd8-88b7-255b451c86ac/generateAnswer',
-            body:    "{question:'" + msg + "'}"
+            body:    "{question:\"" + msg + "\"}"
           }, function(error, response, body){
-              /*
-            var answer = decode(JSON.parse(body).answers[0].answer).replace("<br/>","\n\n");
-            answer = replaceall("<br/>","\n\n",answer);
-            answer = striptags(answer);
-            session.send(answer);
-            session.endDialog();*/
             var answer = JSON.parse(body).answers[0].answer;
-            //session.send(JSON.parse(body).answers[0].answer);
             if(answer.indexOf("rtl") != -1)
                 answer = "<div dir=\"rtl\">" + answer + "</div>";
             session.send(decode(answer));
-            //session.send(decode(JSON.parse(body).answers[0].answer));
+
+            if(session.conversationData.occurance != null){
+                session.conversationData.occurance++;
+            }
+            else{
+                session.conversationData.occurance=0;
+            }
+            if(session.conversationData.occurance >= program.Constants.questionsBeforeInvest && !session.conversationData.applicationSubmitted){
+                session.replaceDialog("wantToInvest");
+            }else{
+                session.endDialog();
+            }
+
           });
 
 
@@ -139,13 +142,26 @@ var intents = new builder.IntentDialog({ recognizers: [
         request.post({
             headers: {'content-type' : 'application/json','Ocp-Apim-Subscription-Key':'5721988f51b24dc9b2fa7bf95bb6b7c9'},
             url:     'https://westus.api.cognitive.microsoft.com/qnamaker/v2.0/knowledgebases/83feeddc-ec61-4bd8-88b7-255b451c86ac/generateAnswer',
-            body:    "{question:'" + msg + "'}"
+            body:    "{question:\"" + msg + "\"}"
           }, function(error, response, body){
             var answer = JSON.parse(body).answers[0].answer;
-            //session.send(JSON.parse(body).answers[0].answer);
+            
             if(answer.indexOf("rtl") != -1)
                 answer = "<div dir=\"rtl\">" + answer + "</div>";
             session.send(decode(answer));
+
+            if(session.conversationData.occurance != null){
+                session.conversationData.occurance++;
+            }
+            else{
+                session.conversationData.occurance=0;
+            }
+            if(session.conversationData.occurance >= program.Constants.questionsBeforeInvest && !session.conversationData.applicationSubmitted){
+                session.replaceDialog("wantToInvest");
+            }else{
+                session.endDialog();
+            }
+
           });
     }
 })
@@ -184,7 +200,6 @@ var intents = new builder.IntentDialog({ recognizers: [
 })
 .matches('qna',[
     function (session, args, next) {
-
         var answerEntity = builder.EntityRecognizer.findEntity(args.entities, 'answer');
         session.send(answerEntity.entity);
         if(session.conversationData.occurance != null){
