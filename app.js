@@ -720,7 +720,7 @@ var program = {
                     session.send(program.Options.ManualHelp[locale][results.response.entity].Description).endDialog();
                 }
                 if(index == 1){
-                    session.send("<iframe style='height:300px' src='https://www.google.com.qa/maps/place/The+Gate+Mall/@25.3224538,51.5246233,17z/data=!3m1!4b1!4m5!3m4!1s0x3e45c4b871523a67:0x4504d3d2902315a6!8m2!3d25.322449!4d51.526812?hl=en'></iframe>").endDialog();
+                    session.send("<iframe style='height:300px' src='https://www.google.com/maps/embed/v1/place?key=AIzaSyCLZyAIsCWgtflWwbHCYDSZALUCnftXA-o&q=Space+Needle,Seattle+WA'></iframe>").endDialog();
                 }
                 //program.Options.ManualHelp[locale]
                 if(index == 2){
@@ -744,7 +744,7 @@ var program = {
                         session.send(program.Options.ManualHelp[locale][results.response.entity].Description).endDialog();
                     }
                     if(index == 1){
-                        session.send("<iframe style='height:300px' src='https://www.google.com.qa/maps/place/The+Gate+Mall/@25.3224538,51.5246233,17z/data=!3m1!4b1!4m5!3m4!1s0x3e45c4b871523a67:0x4504d3d2902315a6!8m2!3d25.322449!4d51.526812?hl=en'></iframe>").endDialog();
+                        session.send("<iframe style='height:300px' src='https://www.google.com/maps/embed/v1/place?key=AIzaSyCLZyAIsCWgtflWwbHCYDSZALUCnftXA-o&q=Space+Needle,Seattle+WA'></iframe>").endDialog();
                     }
                     //program.Options.ManualHelp[locale]
                     if(index == 2){
