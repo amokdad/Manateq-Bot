@@ -62,8 +62,10 @@ var intents = new builder.IntentDialog({ recognizers: [
 })
 .matches("Want",(session,args)=>{
     //session.send("Want");
+    var msg = session.message.text;
     var isInvestment = program.Helpers.IsInvestmentIntent(args);
-    if(isInvestment){
+    var isquestion = program.Helpers.IsQuestion(msg);
+    if(isInvestment && !isquestion){
         if(!session.conversationData.applicationSubmitted)
         {
             session.replaceDialog("wantToInvest");
@@ -73,9 +75,7 @@ var intents = new builder.IntentDialog({ recognizers: [
         }
     }
     else{
-
-
-        var msg = session.message.text;
+        
          // session.send("dsa" + msg + "dsadsa");
          // session.send(JSON.stringify(args))
           request.post({
@@ -192,7 +192,11 @@ var program = {
         YesNo : {
             en:"Yes|No",
             ar:"نعم|كلا"
-        }
+        },
+        YesNoMoreInfo : {
+            en:"Yes|No|More Info",
+            ar:"نعم|كلا|المزيد من المعلومات "
+        },
     },
     Options:{
         Zones: {
@@ -491,7 +495,7 @@ var program = {
             //     session.beginDialog("setLanguage");
             // },
             function(session,results){
-               builder.Prompts.choice(session, "alreadySubmitted" ,program.Constants.YesNo[session.preferredLocale()],{listStyle: builder.ListStyle.button});
+               builder.Prompts.choice(session, "alreadySubmitted" ,program.Constants.YesNoMoreInfo[session.preferredLocale()],{listStyle: builder.ListStyle.button});
             },
             function(session,results){
                 var index = results.response.index;
@@ -499,6 +503,10 @@ var program = {
                 {
                     session.replaceDialog("invest");
                 }
+                else if(index == 2)
+                    {
+                        session.send("investAnswer").endDialog();
+                    }
                 else{
                     session.endDialog();
                 }
@@ -663,12 +671,16 @@ var program = {
             //     session.beginDialog("setLanguage");
             // },
             function(session,results){
-                builder.Prompts.choice(session, "maybeinInvestor",program.Constants.YesNo[session.preferredLocale()],{listStyle: builder.ListStyle.button});
+                builder.Prompts.choice(session, "maybeinInvestor",program.Constants.YesNoMoreInfo[session.preferredLocale()],{listStyle: builder.ListStyle.button});
             },
             function(session,results){
                 var result = results.response.index;
                 if(result == 0){
                     session.replaceDialog("invest");
+                }
+                else if(result == 2)
+                {
+                    session.send("investAnswer").endDialog();
                 }
                 else{
                     session.send("thanks");
@@ -691,7 +703,7 @@ var program = {
                     session.send(program.Options.ManualHelp[locale][results.response.entity].Description).endDialog();
                 }
                 if(index == 1){
-                    session.send("<iframe style='height:300px' src='https://gis.manateq.qa/manateq/manateqmain.aspx?language=ar'></iframe>").endDialog();
+                    session.send("<iframe style='height:300px' src='https://www.google.com.qa/maps/place/The+Gate+Mall/@25.3224538,51.5246233,17z/data=!3m1!4b1!4m5!3m4!1s0x3e45c4b871523a67:0x4504d3d2902315a6!8m2!3d25.322449!4d51.526812?hl=en'></iframe>").endDialog();
                 }
                 //program.Options.ManualHelp[locale]
                 if(index == 2){
@@ -699,7 +711,31 @@ var program = {
                 }else{
                     session.endDialog();
                 }
-            }]).triggerAction({matches: /Main Menu|اللائحة الرئيسية/i});
+            }])//.triggerAction({matches: /Main Menu|اللائحة الرئيسية/i});
+
+            bot.dialog("manualHelpMainMenu",[
+                function(session){
+                    
+                    session.conversationData.unknown = null;
+                    var locale = session.preferredLocale();
+                    builder.Prompts.choice(session, "manualHelpTextMainMenu", program.Options.ManualHelp[locale],{listStyle: builder.ListStyle.button});
+                },
+                function(session,results){
+                    var index = JSON.stringify(results.response.index);
+                    var locale = session.preferredLocale();
+                    if(index == 0){
+                        session.send(program.Options.ManualHelp[locale][results.response.entity].Description).endDialog();
+                    }
+                    if(index == 1){
+                        session.send("<iframe style='height:300px' src='https://www.google.com.qa/maps/place/The+Gate+Mall/@25.3224538,51.5246233,17z/data=!3m1!4b1!4m5!3m4!1s0x3e45c4b871523a67:0x4504d3d2902315a6!8m2!3d25.322449!4d51.526812?hl=en'></iframe>").endDialog();
+                    }
+                    //program.Options.ManualHelp[locale]
+                    if(index == 2){
+                        session.replaceDialog("invest");
+                    }else{
+                        session.endDialog();
+                    }
+                }]).triggerAction({matches: /Main Menu|اللائحة الرئيسية/i});
         /*
         bot.dialog("manualHelp",[
             function(session){
@@ -862,6 +898,9 @@ var program = {
             args.entities[0].entity == "investment" ||
             args.entities[0].entity == "investing" ||
             args.entities[0].entity == "land";
+        },
+        IsQuestion: function(msg){
+            return msg.toLowerCase().indexOf("what type of") != -1 || msg.toLowerCase().indexOf("am i") != -1;
         }
     } 
  
