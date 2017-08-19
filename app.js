@@ -160,7 +160,6 @@ var intents = new builder.IntentDialog({ recognizers: [
     function (session, args, next) {
         //session.send(JSON.stringify(args))
         var answerEntity = builder.EntityRecognizer.findEntity(args.entities, 'answer');
-        session.send(JSON.stringify(answerEntity.entity));
         session.send(answerEntity.entity);
         if(session.conversationData.occurance != null){
             session.conversationData.occurance++;
