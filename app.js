@@ -720,7 +720,7 @@ var program = {
                     session.send(program.Options.ManualHelp[locale][results.response.entity].Description).endDialog();
                 }
                 if(index == 1){
-                    session.send("<iframe style='height:300px' src='https://www.google.com/maps/embed/v1/place?key=AIzaSyCLZyAIsCWgtflWwbHCYDSZALUCnftXA-o&q=Space+Needle,Seattle+WA'></iframe>").endDialog();
+                    session.send("<iframe style='height:300px' src='https://www.google.com/maps/embed/v1/place?key=AIzaSyCLZyAIsCWgtflWwbHCYDSZALUCnftXA-o&q=Qatar+The+Gate+Mall'></iframe>").endDialog();
                 }
                 //program.Options.ManualHelp[locale]
                 if(index == 2){
@@ -744,7 +744,7 @@ var program = {
                         session.send(program.Options.ManualHelp[locale][results.response.entity].Description).endDialog();
                     }
                     if(index == 1){
-                        session.send("<iframe style='height:300px' src='https://www.google.com/maps/embed/v1/place?key=AIzaSyCLZyAIsCWgtflWwbHCYDSZALUCnftXA-o&q=Space+Needle,Seattle+WA'></iframe>").endDialog();
+                        session.send("<iframe style='height:300px' src='https://www.google.com/maps/embed/v1/place?key=AIzaSyCLZyAIsCWgtflWwbHCYDSZALUCnftXA-o&q=Qatar+The+Gate+Mall'></iframe>").endDialog();
                     }
                     //program.Options.ManualHelp[locale]
                     if(index == 2){
