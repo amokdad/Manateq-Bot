@@ -113,7 +113,7 @@ var intents = new builder.IntentDialog({ recognizers: [
             //session.send(JSON.parse(body).answers[0].answer);
             if(answer.indexOf("rtl") != -1)
                 answer = "<div dir=\"rtl\">" + answer + "</div>";
-            session.send(answer);
+            session.send(decode(answer));
             //session.send(decode(JSON.parse(body).answers[0].answer));
           });
 
