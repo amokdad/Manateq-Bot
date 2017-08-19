@@ -141,11 +141,11 @@ var intents = new builder.IntentDialog({ recognizers: [
             url:     'https://westus.api.cognitive.microsoft.com/qnamaker/v2.0/knowledgebases/83feeddc-ec61-4bd8-88b7-255b451c86ac/generateAnswer',
             body:    "{question:'" + msg + "'}"
           }, function(error, response, body){
-            var answer = decode(JSON.parse(body).answers[0].answer).replace("<br/>","\n\n");
-            answer = replaceall("<br/>","\n\n",answer);
-            answer = striptags(answer);
-            session.send(answer);
-            session.endDialog();
+            var answer = JSON.parse(body).answers[0].answer;
+            //session.send(JSON.parse(body).answers[0].answer);
+            if(answer.indexOf("rtl") != -1)
+                answer = "<div dir=\"rtl\">" + answer + "</div>";
+            session.send(decode(answer));
           });
     }
 })
@@ -184,7 +184,7 @@ var intents = new builder.IntentDialog({ recognizers: [
 })
 .matches('qna',[
     function (session, args, next) {
-        session.send("qna");
+
         var answerEntity = builder.EntityRecognizer.findEntity(args.entities, 'answer');
         session.send(answerEntity.entity);
         if(session.conversationData.occurance != null){
