@@ -13,8 +13,9 @@ Q = require('q');
 // Setup Restify Server
 
 var server = restify.createServer();
+console.log(server.url);
 server.listen(process.env.port || process.env.PORT || 3978, function () {
-   console.log('%s listening to %s', server.name, server.url); 
+  console.log('%s listening to %s', server.name, server.url); 
 });
 
 /*
@@ -839,7 +840,7 @@ var program = {
         ]);
         bot.dialog("setLanguageWithPic",[
             function(session){
-                session.send(server.url);
+                
                 var msg = new builder.Message(session);
                 msg.attachmentLayout(builder.AttachmentLayout.carousel);
                 var txt = session.localizer.gettext("en","selectYourLanguage");
