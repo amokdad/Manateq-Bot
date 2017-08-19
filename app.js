@@ -1,6 +1,7 @@
 var restify = require('restify');
 var builder = require('botbuilder');
 var https = require('https');
+var http = require('http');
 var cognitiveservices = require('botbuilder-cognitiveservices');
 var nodemailer = require('nodemailer');
 var request = require('request');
@@ -10,10 +11,26 @@ var replaceall = require("replaceall");
 Q = require('q');
 
 // Setup Restify Server
+
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
    console.log('%s listening to %s', server.name, server.url); 
 });
+
+/*
+var server = http.createServer(function (request, response) {
+    var queryData = url.parse(request.url, true).query;
+    response.writeHead(200, {"Content-Type": "text/plain"});
+  
+    if (queryData.name) {
+
+      response.end('Hello ' + queryData.name + '\n');
+  
+    } else {
+      response.end("Hello World\n");
+    }
+});
+*/
 
 // Create chat connector for communicating with the Bot Framework Service
 var connector = new builder.ChatConnector({
@@ -822,6 +839,7 @@ var program = {
         ]);
         bot.dialog("setLanguageWithPic",[
             function(session){
+                session.send(server.url);
                 var msg = new builder.Message(session);
                 msg.attachmentLayout(builder.AttachmentLayout.carousel);
                 var txt = session.localizer.gettext("en","selectYourLanguage");
