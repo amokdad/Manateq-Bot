@@ -51,7 +51,10 @@ var bot = new builder.UniversalBot(connector,{
 
 // ------------------------------ Recognizers ------------------------------
 var ArabicRecognizers = {
-        investRecognizer : new builder.RegExpRecognizer( "WantAR", /(^(?!(متى|كيف|هل|ما هو|ما هي|أين))(?=.*(إستثمار|مستثمر|أريد أن استثمر|أريد أن أصبح مستثمر)))/i),
+        investRecognizer : new builder.RegExpRecognizer( "WantAR", /(^(?!(متى|كيف|هل|ما هو|ما هي|أين))(?=.*(اريد ان اصبح مستثمر|استثمر|إستثمار|مستثمر|أريد أن استثمر|أريد أن أصبح مستثمر)))/i),
+        
+        
+        
         
         //investRecognizer : new builder.RegExpRecognizer( "WantAR", /(مستثمر|إستثمار|أريد أن استثمر)/i),
         greetingRecognizer : new builder.RegExpRecognizer( "Greeting", /(السلام عليكم|صباح الخير|مساء الخير|مرحباً)/i),
