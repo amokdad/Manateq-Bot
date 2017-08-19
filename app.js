@@ -51,10 +51,9 @@ var bot = new builder.UniversalBot(connector,{
 
 // ------------------------------ Recognizers ------------------------------
 var ArabicRecognizers = {
-        investRecognizer : new builder.RegExpRecognizer( "WantAR", /(^(?!(متى|كيف|هل|ما هو|ما هي|أين))(?=.*(اريد ان اصبح مستثمر|استثمر|إستثمار|مستثمر|أريد أن استثمر|أريد أن أصبح مستثمر)))/i),
-        
-        
-        
+        //investRecognizer : new builder.RegExpRecognizer( "WantAR", /(^(?!(متى|كيف|هل|ما هو|ما هي|أين))(?=.*(استثمر|اريد ان استثمر|اريد ان استثمر مع مناطق|أستثمر|اريد ان اصبح مستثمر|أريد ان استثمر مع مناطق|استثمر|إستثمار|مستثمر|أريد أن استثمر|أريد أن أصبح مستثمر)))/i),
+        //investRecognizer : new builder.RegExpRecognizer( "WantAR", /(أريد ان استثمر مع مناطق|اريد ان استثمر|اريد ان استثمر مع مناطق|أستثمر|اريد ان اصبح مستثمر|استثمر|إستثمار|مستثمر|أريد أن استثمر|أريد أن أصبح مستثمر)/i),
+        investRecognizer : new builder.RegExpRecognizer( "WantAR", /((أريد ان استثمر مع مناطق|اريد ان استثمر|اريد ان استثمر مع مناطق|أستثمر|اريد ان اصبح مستثمر|استثمر|إستثمار|مستثمر|أريد أن استثمر|أريد أن أصبح مستثمر))/i),
         
         //investRecognizer : new builder.RegExpRecognizer( "WantAR", /(مستثمر|إستثمار|أريد أن استثمر)/i),
         greetingRecognizer : new builder.RegExpRecognizer( "Greeting", /(السلام عليكم|صباح الخير|مساء الخير|مرحباً)/i),
@@ -72,17 +71,17 @@ var QnaRecognizer = new cognitiveservices.QnAMakerRecognizer({
 // ------------------------------ End Recognizers ------------------------------   
 
 var intents = new builder.IntentDialog({ recognizers: [
-    recognizer,
-    
+
     ArabicRecognizers.investRecognizer,
     ArabicRecognizers.greetingRecognizer,
     ArabicRecognizers.arabicRecognizer,
     ArabicRecognizers.englishRecognizer,
-    QnaRecognizer
-    ] 
+    QnaRecognizer,
+    recognizer
+    ] ,recognizeOrder:"series"
 })
 .matches("Want",(session,args)=>{
-    //session.send("Want");
+
     var msg = session.message.text;
     var isInvestment = program.Helpers.IsInvestmentIntent(args);
     var isquestion = program.Helpers.IsQuestion(msg);
@@ -118,12 +117,31 @@ var intents = new builder.IntentDialog({ recognizers: [
     }
 })
 .matches("WantAR",(session,args)=>{
-    if(!session.conversationData.applicationSubmitted)
-    {
-        session.replaceDialog("wantToInvest");
+    var msg = session.message.text;
+    var isquestion = program.Helpers.IsQuestionArabic(msg);
+    if(!isquestion){
+        if(!session.conversationData.applicationSubmitted)
+        {
+            session.replaceDialog("wantToInvest");
+        }
+        else{
+            session.replaceDialog("askagain");
+        }
     }
     else{
-        session.replaceDialog("askagain");
+        // session.send(JSON.stringify(args))
+        request.post({
+            headers: {'content-type' : 'application/json','Ocp-Apim-Subscription-Key':'5721988f51b24dc9b2fa7bf95bb6b7c9'},
+            url:     'https://westus.api.cognitive.microsoft.com/qnamaker/v2.0/knowledgebases/83feeddc-ec61-4bd8-88b7-255b451c86ac/generateAnswer',
+            body:    "{question:'" + msg + "'}"
+          }, function(error, response, body){
+            //session.send(body);
+            var answer = decode(JSON.parse(body).answers[0].answer).replace("<br/>","\n\n");
+            answer = replaceall("<br/>","\n\n",answer);
+            answer = striptags(answer);
+            session.send(answer);
+            session.endDialog();
+          });
     }
 })
 .matches('Greeting',(session, args) => {
@@ -922,6 +940,13 @@ var program = {
         },
         IsQuestion: function(msg){
             return msg.toLowerCase().indexOf("what type of") != -1 || msg.toLowerCase().indexOf("am i") != -1;
+        },
+        IsQuestionArabic: function(msg){
+            return msg.toLowerCase().indexOf("أين") != -1 
+            || msg.toLowerCase().indexOf("ما هو") != -1
+            || msg.toLowerCase().indexOf("كيف") != -1
+            || msg.toLowerCase().indexOf("متى") != -1
+            || msg.toLowerCase().indexOf("ما هي") != -1;
         }
     } 
  
